@@ -39,6 +39,13 @@ function App() {
     loadInitialData();
   }, []);
 
+  // Reload schedule when week changes
+  useEffect(() => {
+    if (staff.length > 0 && tasks.length > 0) {
+      loadScheduleForWeek(weekStartDate);
+    }
+  }, [weekStartDate]);
+
   const loadInitialData = async () => {
     try {
       const [staffRes, tasksRes] = await Promise.all([
@@ -48,23 +55,45 @@ function App() {
       setStaff(staffRes.data);
       setTasks(tasksRes.data);
 
-      // Create a new schedule for current week
-      const today = new Date();
-      const weekStart = new Date(today);
-      weekStart.setDate(today.getDate() - today.getDay()); // Sunday
-      const weekEnd = new Date(weekStart);
-      weekEnd.setDate(weekStart.getDate() + 6); // Saturday
-
-      const scheduleRes = await axios.post(`${API_URL}/schedules`, {
-        week_start: weekStart.toISOString().split('T')[0],
-        week_end: weekEnd.toISOString().split('T')[0],
-        name: `Week of ${weekStart.toLocaleDateString()}`
-      });
-      setCurrentSchedule(scheduleRes.data);
+      // Load or create schedule for current week
+      await loadScheduleForWeek(weekStartDate);
       setLoading(false);
     } catch (error) {
       console.error('Error loading data:', error);
       setLoading(false);
+    }
+  };
+
+  const loadScheduleForWeek = async (weekStart) => {
+    try {
+      const scheduleRes = await axios.get(`${API_URL}/schedules/by-week/${weekStart}`);
+      const schedule = scheduleRes.data;
+      setCurrentSchedule(schedule);
+
+      // Load assignments from schedule
+      const assignmentsMap = {};
+      if (schedule.assignments && schedule.assignments.length > 0) {
+        schedule.assignments.forEach(assignment => {
+          const key = `${assignment.day_of_week}-${assignment.time_slot}`;
+          assignmentsMap[key] = {
+            ...assignment,
+            task: {
+              id: assignment.task_id,
+              name: assignment.task_name,
+              icon: assignment.task_icon,
+              color: assignment.task_color
+            },
+            staff: {
+              id: assignment.staff_id,
+              name: assignment.staff_name,
+              color: assignment.staff_color
+            }
+          };
+        });
+      }
+      setAssignments(assignmentsMap);
+    } catch (error) {
+      console.error('Error loading schedule:', error);
     }
   };
 
@@ -275,6 +304,22 @@ function App() {
     }
   };
 
+  const handleReorderTasks = async (taskOrders, newTasksOrder) => {
+    try {
+      // Optimistically update UI
+      setTasks(newTasksOrder);
+
+      // Persist to backend
+      await axios.put(`${API_URL}/tasks/reorder`, { taskOrders });
+    } catch (error) {
+      console.error('Error reordering tasks:', error);
+      alert('Failed to reorder tasks');
+      // Reload tasks from server on error
+      const response = await axios.get(`${API_URL}/tasks`);
+      setTasks(response.data);
+    }
+  };
+
   if (loading) {
     return <div className="loading">Loading Mahuti Tasks...</div>;
   }
@@ -319,6 +364,7 @@ function App() {
             onDeleteStaff={handleDeleteStaff}
             onAddTask={handleAddTask}
             onDeleteTask={handleDeleteTask}
+            onReorderTasks={handleReorderTasks}
           />
           <WeeklySchedule
             tasks={tasks}
