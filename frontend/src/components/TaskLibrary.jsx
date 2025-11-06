@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useDrag, useDrop } from 'react-dnd';
+import { useDrag } from 'react-dnd';
 import './TaskLibrary.css';
 
 const SATURATED_COLORS = [
@@ -62,98 +62,11 @@ function DraggableStaff({ staff, onDelete, onEdit }) {
   );
 }
 
-
-function DraggableTask({ task, index, onDelete, onEdit, onReorder }) {
-  const [{ isDragging }, drag] = useDrag({
-    type: 'TASK_REORDER',
-    item: { taskId: task.id, index, task },
-    collect: (monitor) => ({
-      isDragging: monitor.isDragging()
-    })
-  });
-
-  const [{ isOver }, drop] = useDrop({
-    accept: 'TASK_REORDER',
-    hover: (item) => {
-      if (item.index !== index) {
-        onReorder(item.index, index);
-        item.index = index;
-      }
-    },
-    collect: (monitor) => ({
-      isOver: monitor.isOver()
-    })
-  });
-
-  // Combine drag and drop refs
-  const attachRef = (el) => {
-    drag(el);
-    drop(el);
-  };
-
-  return (
-    <div
-      ref={attachRef}
-      className={`task-info-item ${isDragging ? 'dragging' : ''} ${isOver ? 'drag-over' : ''}`}
-      style={{ opacity: isDragging ? 0.5 : 1 }}
-    >
-      <span className="drag-hint">⇄</span>
-      <span className="task-icon">{task.icon}</span>
-      <span>{task.name}</span>
-      <button
-        className="edit-btn-small"
-        onClick={() => onEdit(task)}
-        title="Edit task"
-      >
-        ✏️
-      </button>
-      <button
-        className="delete-btn-small"
-        onClick={() => onDelete(task.id)}
-        title="Delete task"
-      >
-        ✕
-      </button>
-    </div>
-  );
-}
-
-function TaskLibrary({ tasks, staff, onAddStaff, onUpdateStaff, onDeleteStaff, onAddTask, onUpdateTask, onDeleteTask, onReorderTasks }) {
+function TaskLibrary({ staff, onAddStaff, onUpdateStaff, onDeleteStaff }) {
   const [showStaffForm, setShowStaffForm] = useState(false);
-  const [showTaskForm, setShowTaskForm] = useState(false);
   const [editingStaff, setEditingStaff] = useState(null);
-  const [editingTask, setEditingTask] = useState(null);
   const [newStaffName, setNewStaffName] = useState('');
   const [newStaffColor, setNewStaffColor] = useState(SATURATED_COLORS[0]);
-  const [newTaskName, setNewTaskName] = useState('');
-  const [newTaskIcon, setNewTaskIcon] = useState('');
-  const [newTaskCategory, setNewTaskCategory] = useState('');
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-
-  const handleReorderTask = (fromIndex, toIndex) => {
-    const newTasks = [...tasks];
-    const [movedTask] = newTasks.splice(fromIndex, 1);
-    newTasks.splice(toIndex, 0, movedTask);
-
-    // Update task orders in backend
-    const taskOrders = newTasks.map((task, idx) => ({
-      id: task.id,
-      order_index: idx
-    }));
-
-    onReorderTasks(taskOrders, newTasks);
-  };
-
-  const EMOJI_SUGGESTIONS = [
-    '🍎', '🍌', '🍇', '🍊', '🍓', '🥕', '🥦', '🍞', '🧀', '🥛',
-    '☕', '🥤', '🧃', '💧', '🍪', '🍰', '🧁', '🍕', '🍔', '🌭',
-    '🎨', '🎭', '🎪', '🎬', '🎤', '🎧', '🎮', '🎲', '🧩', '🪀',
-    '📚', '✏️', '📝', '📖', '🖍️', '✂️', '📌', '📎', '🖊️', '📏',
-    '🧸', '🎈', '🎁', '🎀', '🎊', '🎉', '🏆', '🥇', '🎯', '⚽',
-    '🌳', '🌻', '🌺', '🌸', '🌼', '🌷', '🌹', '🍃', '🌿', '🌱',
-    '🧹', '🧺', '🧼', '🧽', '🧴', '🧻', '🛁', '🚿', '🧖', '💆',
-    '😊', '😄', '😍', '🥰', '😎', '🤗', '👍', '👏', '🙌', '✨'
-  ];
 
   const handleEditStaff = (staffMember) => {
     setEditingStaff(staffMember);
@@ -190,57 +103,6 @@ function TaskLibrary({ tasks, staff, onAddStaff, onUpdateStaff, onDeleteStaff, o
     setNewStaffName('');
     setNewStaffColor(SATURATED_COLORS[0]);
     setShowStaffForm(false);
-  };
-
-  const handleEditTask = (task) => {
-    setEditingTask(task);
-    setNewTaskName(task.name);
-    setNewTaskIcon(task.icon);
-    setNewTaskCategory(task.category || '');
-    setShowTaskForm(true);
-  };
-
-  const handleCancelTaskEdit = () => {
-    setEditingTask(null);
-    setNewTaskName('');
-    setNewTaskIcon('');
-    setNewTaskCategory('');
-    setShowTaskForm(false);
-    setShowEmojiPicker(false);
-  };
-
-  const handleAddTask = (e) => {
-    e.preventDefault();
-    if (newTaskName.trim() && newTaskIcon.trim()) {
-      if (editingTask) {
-        // Update existing task
-        onUpdateTask(editingTask.id, {
-          name: newTaskName.trim(),
-          icon: newTaskIcon.trim(),
-          category: newTaskCategory.trim() || 'General',
-          color: editingTask.color // Keep existing color
-        });
-        setEditingTask(null);
-      } else {
-        // Add new task
-        onAddTask({
-          name: newTaskName.trim(),
-          icon: newTaskIcon.trim(),
-          category: newTaskCategory.trim() || 'General',
-          color: SATURATED_COLORS[Math.floor(Math.random() * SATURATED_COLORS.length)]
-        });
-      }
-      setNewTaskName('');
-      setNewTaskIcon('');
-      setNewTaskCategory('');
-      setShowTaskForm(false);
-      setShowEmojiPicker(false);
-    }
-  };
-
-  const handleEmojiSelect = (emoji) => {
-    setNewTaskIcon(emoji);
-    setShowEmojiPicker(false);
   };
 
   return (
@@ -308,98 +170,6 @@ function TaskLibrary({ tasks, staff, onAddStaff, onUpdateStaff, onDeleteStaff, o
               staff={s}
               onEdit={handleEditStaff}
               onDelete={onDeleteStaff}
-            />
-          ))}
-        </div>
-      </div>
-
-      <div className="library-section">
-        <div className="section-header">
-          <h3>Available Tasks</h3>
-          <button
-            className="add-btn"
-            onClick={() => {
-              if (showTaskForm && !editingTask) {
-                setShowTaskForm(false);
-              } else {
-                handleCancelTaskEdit();
-                setShowTaskForm(!showTaskForm);
-              }
-            }}
-          >
-            {showTaskForm ? '✕' : '+ Add Task'}
-          </button>
-        </div>
-
-        {showTaskForm && (
-          <form className="add-form" onSubmit={handleAddTask}>
-            <h3 className="form-title">{editingTask ? 'Edit Task' : 'Add Task'}</h3>
-            <input
-              type="text"
-              placeholder="Task name"
-              value={newTaskName}
-              onChange={(e) => setNewTaskName(e.target.value)}
-              required
-            />
-            <div className="emoji-input-container">
-              <input
-                type="text"
-                placeholder="Emoji icon (e.g., 🍎)"
-                value={newTaskIcon}
-                onChange={(e) => setNewTaskIcon(e.target.value)}
-                required
-              />
-              <button
-                type="button"
-                className="emoji-picker-btn"
-                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                title="Choose emoji"
-              >
-                😊
-              </button>
-            </div>
-            {showEmojiPicker && (
-              <div className="emoji-picker">
-                {EMOJI_SUGGESTIONS.map((emoji, index) => (
-                  <button
-                    key={index}
-                    type="button"
-                    className="emoji-option"
-                    onClick={() => handleEmojiSelect(emoji)}
-                  >
-                    {emoji}
-                  </button>
-                ))}
-              </div>
-            )}
-            <input
-              type="text"
-              placeholder="Category (optional)"
-              value={newTaskCategory}
-              onChange={(e) => setNewTaskCategory(e.target.value)}
-            />
-            <div className="form-actions">
-              <button type="submit" className="submit-btn">
-                {editingTask ? 'Update' : 'Add Task'}
-              </button>
-              {editingTask && (
-                <button type="button" className="cancel-btn" onClick={handleCancelTaskEdit}>
-                  Cancel
-                </button>
-              )}
-            </div>
-          </form>
-        )}
-
-        <div className="task-icons">
-          {tasks.map((task, index) => (
-            <DraggableTask
-              key={task.id}
-              task={task}
-              index={index}
-              onEdit={handleEditTask}
-              onDelete={onDeleteTask}
-              onReorder={handleReorderTask}
             />
           ))}
         </div>

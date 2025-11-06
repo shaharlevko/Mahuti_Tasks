@@ -446,15 +446,10 @@ function App() {
 
         <div className="app-content">
           <TaskLibrary
-            tasks={tasks}
             staff={staff}
             onAddStaff={handleAddStaff}
             onUpdateStaff={handleUpdateStaff}
             onDeleteStaff={handleDeleteStaff}
-            onAddTask={handleAddTask}
-            onUpdateTask={handleUpdateTask}
-            onDeleteTask={handleDeleteTask}
-            onReorderTasks={handleReorderTasks}
           />
           <WeeklySchedule
             tasks={tasks}
@@ -472,6 +467,10 @@ function App() {
             onRedo={handleRedo}
             canUndo={canUndo}
             canRedo={canRedo}
+            onAddTask={handleAddTask}
+            onUpdateTask={handleUpdateTask}
+            onDeleteTask={handleDeleteTask}
+            onReorderTasks={handleReorderTasks}
           />
         </div>
       </div>
