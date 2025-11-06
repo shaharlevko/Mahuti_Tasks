@@ -202,3 +202,81 @@
 .remove-btn:active {
   transform: scale(0.95);
 }
+
+
+/* Clear This Week button */
+.schedule-footer {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  padding: 15px;
+  background: linear-gradient(135deg, #FFF9F5 0%, #FFFEF8 100%);
+  border-radius: 10px;
+}
+
+.clear-week-btn {
+  padding: 12px 30px;
+  background: linear-gradient(135deg, #FFB5A7 0%, #FFC4B0 100%);
+  color: white;
+  border: none;
+  border-radius: 25px;
+  font-size: 1.1em;
+  font-weight: bold;
+  font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', cursive, sans-serif;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 8px rgba(255, 181, 167, 0.3);
+}
+
+.clear-week-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(255, 181, 167, 0.4);
+}
+
+.clear-week-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(255, 181, 167, 0.3);
+}
+
+.undo-btn,
+.redo-btn {
+  padding: 12px 30px;
+  border: none;
+  border-radius: 25px;
+  font-size: 1.1em;
+  font-weight: bold;
+  font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', cursive, sans-serif;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+  color: white;
+}
+
+.undo-btn {
+  background: linear-gradient(135deg, #B4D7E8 0%, #A8D8EA 100%);
+  box-shadow: 0 4px 8px rgba(180, 215, 232, 0.3);
+}
+
+.redo-btn {
+  background: linear-gradient(135deg, #C7ECDE 0%, #B4E7CE 100%);
+  box-shadow: 0 4px 8px rgba(199, 236, 222, 0.3);
+}
+
+.undo-btn:hover:not(:disabled),
+.redo-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+.undo-btn:active:not(:disabled),
+.redo-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.undo-btn:disabled,
+.redo-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: none;
+}

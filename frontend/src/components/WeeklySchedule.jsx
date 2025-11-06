@@ -73,7 +73,12 @@ function WeeklySchedule({
   onShowDaysChange,
   onTaskDrop,
   onRemoveAssignment,
-  onMoveAssignment
+  onMoveAssignment,
+  onClearWeek,
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo
 }) {
   const visibleDays = DAYS.slice(0, showDays);
 
@@ -160,6 +165,32 @@ function WeeklySchedule({
           ))}
         </tbody>
       </table>
+
+      <div className="schedule-footer">
+        <button
+          className="undo-btn"
+          onClick={onUndo}
+          disabled={!canUndo}
+          title="Undo last action"
+        >
+          ↶ Undo
+        </button>
+        <button
+          className="clear-week-btn"
+          onClick={onClearWeek}
+          title="Clear all assignments for this week"
+        >
+          🗑️ Clear This Week
+        </button>
+        <button
+          className="redo-btn"
+          onClick={onRedo}
+          disabled={!canRedo}
+          title="Redo last undone action"
+        >
+          ↷ Redo
+        </button>
+      </div>
     </div>
   );
 }

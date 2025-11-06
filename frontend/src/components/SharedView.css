@@ -1,0 +1,225 @@
+.shared-view {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #FFF9F5 0%, #FFFEF8 100%);
+  padding: 30px;
+  font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', cursive, sans-serif;
+}
+
+.loading-message,
+.error-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  gap: 20px;
+}
+
+.loading-message {
+  font-size: 1.5em;
+  color: #2D5F4B;
+}
+
+.error-icon {
+  font-size: 4em;
+}
+
+.error-message h2 {
+  color: #FF6B58;
+  font-size: 1.5em;
+  text-align: center;
+}
+
+.shared-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 30px;
+  gap: 20px;
+}
+
+.flower-decoration {
+  font-size: 2.5em;
+  animation: rotate 20s linear infinite;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.title-container {
+  text-align: center;
+}
+
+.shared-title {
+  font-size: 2.5em;
+  color: #2D5F4B;
+  margin: 0 0 10px 0;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.week-dates {
+  font-size: 1.2em;
+  color: #666;
+  margin: 5px 0;
+}
+
+.read-only-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #B4D7E8 0%, #A8D8EA 100%);
+  color: #2D5F4B;
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-size: 0.9em;
+  font-weight: bold;
+  margin-top: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.days-toggle {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.toggle-btn {
+  padding: 10px 25px;
+  border: 2px solid #B4E7CE;
+  border-radius: 20px;
+  background: white;
+  color: #2D5F4B;
+  font-family: inherit;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.toggle-btn:hover {
+  background: #E0F7EE;
+}
+
+.toggle-btn.active {
+  background: linear-gradient(135deg, #C7ECDE 0%, #B4E7CE 100%);
+  color: white;
+  box-shadow: 0 4px 8px rgba(183, 231, 206, 0.4);
+}
+
+.shared-table-container {
+  background: white;
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  overflow-x: auto;
+  margin-bottom: 30px;
+}
+
+.shared-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 1em;
+}
+
+.shared-table th {
+  background: linear-gradient(135deg, #FFE4B5 0%, #FFEFD5 100%);
+  padding: 15px;
+  text-align: center;
+  font-weight: bold;
+  border: 2px solid #FFD700;
+  font-size: 1.1em;
+}
+
+.shared-table .task-column {
+  background: linear-gradient(135deg, #FFB5A7 0%, #FFC4B0 100%);
+  color: white;
+  min-width: 150px;
+}
+
+.shared-table td {
+  padding: 15px;
+  border: 2px solid #F0F0F0;
+  text-align: center;
+}
+
+.task-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: bold;
+  background: linear-gradient(135deg, #FFF9F0 0%, #FFFEF8 100%);
+}
+
+.task-icon {
+  font-size: 1.5em;
+}
+
+.task-name {
+  color: #2D5F4B;
+}
+
+.assignment-cell {
+  background: white;
+  min-height: 60px;
+}
+
+.staff-name-shared {
+  display: inline-block;
+  font-weight: bold;
+  font-size: 1.1em;
+  padding: 8px 15px;
+  border-radius: 15px;
+  background: rgba(180, 231, 206, 0.2);
+  border: 2px solid currentColor;
+}
+
+.shared-footer {
+  text-align: center;
+  margin-top: 30px;
+}
+
+.footer-decorations {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  font-size: 2em;
+  margin-bottom: 15px;
+}
+
+.decoration {
+  animation: bounce 2s ease-in-out infinite;
+}
+
+.decoration:nth-child(1) { animation-delay: 0s; }
+.decoration:nth-child(2) { animation-delay: 0.2s; }
+.decoration:nth-child(3) { animation-delay: 0.4s; }
+.decoration:nth-child(4) { animation-delay: 0.6s; }
+.decoration:nth-child(5) { animation-delay: 0.8s; }
+.decoration:nth-child(6) { animation-delay: 1s; }
+.decoration:nth-child(7) { animation-delay: 1.2s; }
+.decoration:nth-child(8) { animation-delay: 1.4s; }
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.powered-by {
+  color: #999;
+  font-size: 0.9em;
+  margin: 10px 0 0 0;
+}
+
+@media print {
+  .days-toggle {
+    display: none;
+  }
+}

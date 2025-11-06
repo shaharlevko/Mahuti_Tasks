@@ -7,9 +7,10 @@ const DAYS_5 = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
 const DAYS_6 = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 const DAY_COLORS = ['#8B4513', '#4169E1', '#2F4F4F', '#FF8C00', '#8B4513', '#DC143C'];
 
-function PrintView({ tasks, staff, assignments, weekStartDate, showDays, onClose }) {
+function PrintView({ tasks, staff, assignments, weekStartDate, showDays, onClose, scheduleId }) {
   const printContentRef = useRef(null);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [showShareDropdown, setShowShareDropdown] = useState(false);
 
   const DAYS = showDays === 6 ? DAYS_6 : DAYS_5;
 
@@ -27,6 +28,38 @@ function PrintView({ tasks, staff, assignments, weekStartDate, showDays, onClose
       document.body.classList.remove('print-mode');
     };
   }, []);
+
+
+  const getShareUrl = () => {
+    const baseUrl = window.location.origin;
+    return `${baseUrl}/shared/${scheduleId}`;
+  };
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(getShareUrl());
+      alert('Link copied to clipboard!');
+      setShowShareDropdown(false);
+    } catch (error) {
+      console.error('Error copying link:', error);
+      alert('Failed to copy link');
+    }
+  };
+
+  const handleShareWhatsApp = () => {
+    const url = getShareUrl();
+    const text = `Check out this weekly schedule: ${url}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    setShowShareDropdown(false);
+  };
+
+  const handleShareEmail = () => {
+    const url = getShareUrl();
+    const subject = 'Weekly Task Schedule';
+    const body = `I wanted to share this weekly task schedule with you:\n\n${url}`;
+    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    setShowShareDropdown(false);
+  };
 
   const handlePrint = () => {
     window.print();
@@ -102,6 +135,27 @@ function PrintView({ tasks, staff, assignments, weekStartDate, showDays, onClose
           >
             {isGeneratingPDF ? '⏳ Generating...' : '📥 Download PDF'}
           </button>
+          <div className="share-dropdown-container">
+            <button
+              onClick={() => setShowShareDropdown(!showShareDropdown)}
+              className="btn-primary"
+            >
+              📤 Share
+            </button>
+            {showShareDropdown && (
+              <div className="share-dropdown">
+                <button onClick={handleCopyLink} className="share-option">
+                  🔗 Copy Link
+                </button>
+                <button onClick={handleShareWhatsApp} className="share-option">
+                  💬 WhatsApp
+                </button>
+                <button onClick={handleShareEmail} className="share-option">
+                  ✉️ Email
+                </button>
+              </div>
+            )}
+          </div>
           <button onClick={onClose} className="btn-secondary">
             ← Back to Editor
           </button>

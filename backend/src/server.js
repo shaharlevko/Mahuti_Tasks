@@ -281,6 +281,19 @@ app.delete('/api/assignments/:id', (req, res) => {
   });
 });
 
+// Clear all assignments for a schedule
+app.delete('/api/schedules/:id/assignments', (req, res) => {
+  const scheduleId = req.params.id;
+
+  db.run('DELETE FROM schedule_assignments WHERE schedule_id = ?', [scheduleId], function(err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({
+      message: 'All assignments cleared successfully',
+      deletedCount: this.changes
+    });
+  });
+});
+
 // Templates endpoints
 app.get('/api/templates', (req, res) => {
   db.all('SELECT * FROM templates ORDER BY name', [], (err, rows) => {

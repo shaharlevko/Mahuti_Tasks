@@ -5,6 +5,7 @@ import axios from 'axios';
 import WeeklySchedule from './components/WeeklySchedule';
 import TaskLibrary from './components/TaskLibrary';
 import PrintView from './components/PrintView';
+import ConfirmDialog from './components/ConfirmDialog';
 import './App.css';
 
 const API_URL = 'http://localhost:3001/api';
@@ -17,6 +18,11 @@ function App() {
   const [showPrintView, setShowPrintView] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showDays, setShowDays] = useState(5);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+
+  // Undo/Redo state
+  const [history, setHistory] = useState([]);
+  const [currentHistoryIndex, setCurrentHistoryIndex] = useState(-1);
 
   // Calculate the current week's Sunday
   const getCurrentSunday = () => {
@@ -34,6 +40,40 @@ function App() {
     currentDate.setDate(currentDate.getDate() + (direction * 7));
     setWeekStartDate(currentDate.toISOString().split('T')[0]);
   };
+
+  // Undo/Redo functions
+  const saveToHistory = (newAssignments) => {
+    // Remove any history after current index (when making new changes after undo)
+    const newHistory = history.slice(0, currentHistoryIndex + 1);
+    // Add current state to history
+    newHistory.push(JSON.parse(JSON.stringify(newAssignments)));
+    // Limit history to 50 items
+    if (newHistory.length > 50) {
+      newHistory.shift();
+    } else {
+      setCurrentHistoryIndex(currentHistoryIndex + 1);
+    }
+    setHistory(newHistory);
+  };
+
+  const handleUndo = () => {
+    if (currentHistoryIndex > 0) {
+      const previousState = history[currentHistoryIndex - 1];
+      setAssignments(JSON.parse(JSON.stringify(previousState)));
+      setCurrentHistoryIndex(currentHistoryIndex - 1);
+    }
+  };
+
+  const handleRedo = () => {
+    if (currentHistoryIndex < history.length - 1) {
+      const nextState = history[currentHistoryIndex + 1];
+      setAssignments(JSON.parse(JSON.stringify(nextState)));
+      setCurrentHistoryIndex(currentHistoryIndex + 1);
+    }
+  };
+
+  const canUndo = currentHistoryIndex > 0;
+  const canRedo = currentHistoryIndex < history.length - 1;
 
   useEffect(() => {
     loadInitialData();
@@ -92,6 +132,9 @@ function App() {
         });
       }
       setAssignments(assignmentsMap);
+      // Initialize history with loaded state
+      setHistory([JSON.parse(JSON.stringify(assignmentsMap))]);
+      setCurrentHistoryIndex(0);
     } catch (error) {
       console.error('Error loading schedule:', error);
     }
@@ -114,10 +157,12 @@ function App() {
 
       // Update local state
       const key = `${day}-${task.name}`;
-      setAssignments(prev => ({
-        ...prev,
+      const newAssignments = {
+        ...assignments,
         [key]: { ...response.data, task, staff: staffMember }
-      }));
+      };
+      saveToHistory(newAssignments);
+      setAssignments(newAssignments);
     } catch (error) {
       if (error.response?.status === 409) {
         alert('Conflict: Staff member already assigned at this time!');
@@ -131,15 +176,14 @@ function App() {
     try {
       await axios.delete(`${API_URL}/assignments/${assignmentId}`);
       // Remove from local state
-      setAssignments(prev => {
-        const newAssignments = { ...prev };
-        Object.keys(newAssignments).forEach(key => {
-          if (newAssignments[key].id === assignmentId) {
-            delete newAssignments[key];
-          }
-        });
-        return newAssignments;
+      const newAssignments = { ...assignments };
+      Object.keys(newAssignments).forEach(key => {
+        if (newAssignments[key].id === assignmentId) {
+          delete newAssignments[key];
+        }
       });
+      saveToHistory(newAssignments);
+      setAssignments(newAssignments);
     } catch (error) {
       console.error('Error removing assignment:', error);
     }
@@ -176,8 +220,8 @@ function App() {
         ]);
 
         // Swap in local state
-        setAssignments(prev => ({
-          ...prev,
+        const newAssignments = {
+          ...assignments,
           [fromKey]: {
             ...toAssignment,
             day_of_week: fromAssignment.day_of_week,
@@ -190,7 +234,9 @@ function App() {
             time_slot: toTaskName,
             task: toAssignment.task
           }
-        }));
+        };
+        saveToHistory(newAssignments);
+        setAssignments(newAssignments);
       } else {
         // Just move to empty cell
         const task = tasks.find(t => t.name === toTaskName);
@@ -203,18 +249,17 @@ function App() {
         });
 
         // Update local state
-        setAssignments(prev => {
-          const newAssignments = { ...prev };
-          delete newAssignments[fromKey];
-          newAssignments[toKey] = {
-            ...fromAssignment,
-            task_id: task.id,
-            task: task,
-            day_of_week: toDay,
-            time_slot: toTaskName
-          };
-          return newAssignments;
-        });
+        const newAssignments = { ...assignments };
+        delete newAssignments[fromKey];
+        newAssignments[toKey] = {
+          ...fromAssignment,
+          task_id: task.id,
+          task: task,
+          day_of_week: toDay,
+          time_slot: toTaskName
+        };
+        saveToHistory(newAssignments);
+        setAssignments(newAssignments);
       }
     } catch (error) {
       console.error('Error moving assignment:', error);
@@ -283,6 +328,26 @@ function App() {
     }
   };
 
+  const handleUpdateTask = async (taskId, taskData) => {
+    try {
+      const response = await axios.put(`${API_URL}/tasks/${taskId}`, taskData);
+      setTasks(prev => prev.map(t => t.id === taskId ? response.data : t));
+      // Update assignments with new task data
+      setAssignments(prev => {
+        const newAssignments = { ...prev };
+        Object.keys(newAssignments).forEach(key => {
+          if (newAssignments[key].task_id === taskId) {
+            newAssignments[key].task = response.data;
+          }
+        });
+        return newAssignments;
+      });
+    } catch (error) {
+      console.error('Error updating task:', error);
+      alert('Failed to update task');
+    }
+  };
+
   const handleDeleteTask = async (taskId) => {
     if (!confirm('Are you sure you want to delete this task?')) return;
     try {
@@ -320,6 +385,29 @@ function App() {
     }
   };
 
+  const handleClearWeek = () => {
+    if (!currentSchedule) return;
+    setShowConfirmDialog(true);
+  };
+
+  const handleConfirmClear = async () => {
+    setShowConfirmDialog(false);
+
+    try {
+      await axios.delete(`${API_URL}/schedules/${currentSchedule.id}/assignments`);
+      const newAssignments = {};
+      saveToHistory(newAssignments);
+      setAssignments(newAssignments);
+    } catch (error) {
+      console.error('Error clearing week:', error);
+      alert('Failed to clear week. Please try again.');
+    }
+  };
+
+  const handleCancelClear = () => {
+    setShowConfirmDialog(false);
+  };
+
   if (loading) {
     return <div className="loading">Loading Mahuti Tasks...</div>;
   }
@@ -333,6 +421,7 @@ function App() {
         weekStartDate={weekStartDate}
         showDays={showDays}
         onClose={() => setShowPrintView(false)}
+        scheduleId={currentSchedule?.id}
       />
     );
   }
@@ -363,6 +452,7 @@ function App() {
             onUpdateStaff={handleUpdateStaff}
             onDeleteStaff={handleDeleteStaff}
             onAddTask={handleAddTask}
+            onUpdateTask={handleUpdateTask}
             onDeleteTask={handleDeleteTask}
             onReorderTasks={handleReorderTasks}
           />
@@ -377,11 +467,24 @@ function App() {
             onTaskDrop={handleTaskDrop}
             onRemoveAssignment={handleRemoveAssignment}
             onMoveAssignment={handleMoveAssignment}
+            onClearWeek={handleClearWeek}
+            onUndo={handleUndo}
+            onRedo={handleRedo}
+            canUndo={canUndo}
+            canRedo={canRedo}
           />
         </div>
       </div>
+
+      <ConfirmDialog
+        isOpen={showConfirmDialog}
+        message="Are you sure you want to clear this week?"
+        onConfirm={handleConfirmClear}
+        onCancel={handleCancelClear}
+      />
     </DndProvider>
   );
 }
 
 export default App;
+

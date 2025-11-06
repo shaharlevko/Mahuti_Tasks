@@ -63,7 +63,7 @@ function DraggableStaff({ staff, onDelete, onEdit }) {
 }
 
 
-function DraggableTask({ task, index, onDelete, onReorder }) {
+function DraggableTask({ task, index, onDelete, onEdit, onReorder }) {
   const [{ isDragging }, drag] = useDrag({
     type: 'TASK_REORDER',
     item: { taskId: task.id, index, task },
@@ -101,6 +101,13 @@ function DraggableTask({ task, index, onDelete, onReorder }) {
       <span className="task-icon">{task.icon}</span>
       <span>{task.name}</span>
       <button
+        className="edit-btn-small"
+        onClick={() => onEdit(task)}
+        title="Edit task"
+      >
+        ✏️
+      </button>
+      <button
         className="delete-btn-small"
         onClick={() => onDelete(task.id)}
         title="Delete task"
@@ -111,10 +118,11 @@ function DraggableTask({ task, index, onDelete, onReorder }) {
   );
 }
 
-function TaskLibrary({ tasks, staff, onAddStaff, onUpdateStaff, onDeleteStaff, onAddTask, onDeleteTask, onReorderTasks }) {
+function TaskLibrary({ tasks, staff, onAddStaff, onUpdateStaff, onDeleteStaff, onAddTask, onUpdateTask, onDeleteTask, onReorderTasks }) {
   const [showStaffForm, setShowStaffForm] = useState(false);
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [editingStaff, setEditingStaff] = useState(null);
+  const [editingTask, setEditingTask] = useState(null);
   const [newStaffName, setNewStaffName] = useState('');
   const [newStaffColor, setNewStaffColor] = useState(SATURATED_COLORS[0]);
   const [newTaskName, setNewTaskName] = useState('');
@@ -184,15 +192,44 @@ function TaskLibrary({ tasks, staff, onAddStaff, onUpdateStaff, onDeleteStaff, o
     setShowStaffForm(false);
   };
 
+  const handleEditTask = (task) => {
+    setEditingTask(task);
+    setNewTaskName(task.name);
+    setNewTaskIcon(task.icon);
+    setNewTaskCategory(task.category || '');
+    setShowTaskForm(true);
+  };
+
+  const handleCancelTaskEdit = () => {
+    setEditingTask(null);
+    setNewTaskName('');
+    setNewTaskIcon('');
+    setNewTaskCategory('');
+    setShowTaskForm(false);
+    setShowEmojiPicker(false);
+  };
+
   const handleAddTask = (e) => {
     e.preventDefault();
     if (newTaskName.trim() && newTaskIcon.trim()) {
-      onAddTask({
-        name: newTaskName.trim(),
-        icon: newTaskIcon.trim(),
-        category: newTaskCategory.trim() || 'General',
-        color: SATURATED_COLORS[Math.floor(Math.random() * SATURATED_COLORS.length)]
-      });
+      if (editingTask) {
+        // Update existing task
+        onUpdateTask(editingTask.id, {
+          name: newTaskName.trim(),
+          icon: newTaskIcon.trim(),
+          category: newTaskCategory.trim() || 'General',
+          color: editingTask.color // Keep existing color
+        });
+        setEditingTask(null);
+      } else {
+        // Add new task
+        onAddTask({
+          name: newTaskName.trim(),
+          icon: newTaskIcon.trim(),
+          category: newTaskCategory.trim() || 'General',
+          color: SATURATED_COLORS[Math.floor(Math.random() * SATURATED_COLORS.length)]
+        });
+      }
       setNewTaskName('');
       setNewTaskIcon('');
       setNewTaskCategory('');
@@ -281,7 +318,14 @@ function TaskLibrary({ tasks, staff, onAddStaff, onUpdateStaff, onDeleteStaff, o
           <h3>Available Tasks</h3>
           <button
             className="add-btn"
-            onClick={() => setShowTaskForm(!showTaskForm)}
+            onClick={() => {
+              if (showTaskForm && !editingTask) {
+                setShowTaskForm(false);
+              } else {
+                handleCancelTaskEdit();
+                setShowTaskForm(!showTaskForm);
+              }
+            }}
           >
             {showTaskForm ? '✕' : '+ Add Task'}
           </button>
@@ -289,6 +333,7 @@ function TaskLibrary({ tasks, staff, onAddStaff, onUpdateStaff, onDeleteStaff, o
 
         {showTaskForm && (
           <form className="add-form" onSubmit={handleAddTask}>
+            <h3 className="form-title">{editingTask ? 'Edit Task' : 'Add Task'}</h3>
             <input
               type="text"
               placeholder="Task name"
@@ -333,7 +378,16 @@ function TaskLibrary({ tasks, staff, onAddStaff, onUpdateStaff, onDeleteStaff, o
               value={newTaskCategory}
               onChange={(e) => setNewTaskCategory(e.target.value)}
             />
-            <button type="submit" className="submit-btn">Add Task</button>
+            <div className="form-actions">
+              <button type="submit" className="submit-btn">
+                {editingTask ? 'Update' : 'Add Task'}
+              </button>
+              {editingTask && (
+                <button type="button" className="cancel-btn" onClick={handleCancelTaskEdit}>
+                  Cancel
+                </button>
+              )}
+            </div>
           </form>
         )}
 
@@ -343,6 +397,7 @@ function TaskLibrary({ tasks, staff, onAddStaff, onUpdateStaff, onDeleteStaff, o
               key={task.id}
               task={task}
               index={index}
+              onEdit={handleEditTask}
               onDelete={onDeleteTask}
               onReorder={handleReorderTask}
             />
