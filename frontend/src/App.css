@@ -1,0 +1,92 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', cursive, sans-serif;
+  background: linear-gradient(135deg, #FFF9F5 0%, #FFFEF8 100%);
+  color: #555;
+  min-height: 100vh;
+}
+
+.app {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Header */
+.app-header {
+  background: linear-gradient(135deg, #FFCBA4 0%, #FFD8B8 100%);
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 30px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.header-left h1 {
+  color: #D47F61;
+  font-size: 2.5em;
+  text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.7);
+}
+
+.flower-icon {
+  font-size: 3em;
+  animation: rotate 3s ease-in-out infinite;
+}
+
+@keyframes rotate {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(10deg); }
+}
+
+.btn-print {
+  background: linear-gradient(135deg, #C7ECDE 0%, #B4E7CE 100%);
+  color: #2D5F4B;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 25px;
+  font-size: 1.1em;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: bold;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-print:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.18);
+}
+
+.btn-print:active {
+  transform: translateY(0);
+}
+
+/* Main content area */
+.app-content {
+  display: flex;
+  gap: 20px;
+}
+
+/* Loading state */
+.loading {
+  text-align: center;
+  font-size: 2em;
+  padding: 50px;
+  color: #FFB5A7;
+}

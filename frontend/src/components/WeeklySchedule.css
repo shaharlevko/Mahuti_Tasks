@@ -1,0 +1,204 @@
+.weekly-schedule {
+  flex: 1;
+  background: white;
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  overflow-x: auto;
+}
+
+.schedule-controls {
+  display: flex;
+  gap: 30px;
+  margin-bottom: 20px;
+  padding: 15px;
+  background: linear-gradient(135deg, #FFF9F5 0%, #FFFEF8 100%);
+  border-radius: 10px;
+  flex-wrap: wrap;
+}
+
+.controls-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.controls-group label {
+  font-weight: bold;
+  color: #2D5F4B;
+  font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', cursive, sans-serif;
+}
+
+.week-navigation {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: white;
+  padding: 5px 10px;
+  border-radius: 20px;
+  border: 2px solid #B4E7CE;
+}
+
+.nav-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 15px;
+  background: linear-gradient(135deg, #C7ECDE 0%, #B4E7CE 100%);
+  color: #2D5F4B;
+  font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', cursive, sans-serif;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.9em;
+}
+
+.nav-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+}
+
+.week-display {
+  font-weight: bold;
+  color: #2D5F4B;
+  font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', cursive, sans-serif;
+  min-width: 150px;
+  text-align: center;
+  font-size: 1em;
+}
+
+.toggle-group {
+  display: flex;
+  gap: 5px;
+  background: #F0F0F0;
+  border-radius: 20px;
+  padding: 3px;
+}
+
+.toggle-btn {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 17px;
+  font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', cursive, sans-serif;
+  font-weight: bold;
+  cursor: pointer;
+  background: transparent;
+  color: #666;
+  transition: all 0.3s;
+}
+
+.toggle-btn.active {
+  background: linear-gradient(135deg, #C7ECDE 0%, #B4E7CE 100%);
+  color: #2D5F4B;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.schedule-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: white;
+}
+
+.schedule-table thead tr {
+  background: linear-gradient(135deg, #C7ECDE 0%, #D5F4E6 100%);
+}
+
+.schedule-table th {
+  padding: 15px;
+  text-align: center;
+  font-size: 1.3em;
+  font-weight: bold;
+  border: 3px solid #B4E7CE;
+  position: relative;
+}
+
+.schedule-table th:first-child {
+  border-radius: 15px 0 0 0;
+}
+
+.schedule-table th:last-child {
+  border-radius: 0 15px 0 0;
+}
+
+.task-header {
+  background: linear-gradient(135deg, #FFF4E0 0%, #FFFEF0 100%);
+  color: #666;
+  text-align: left;
+  padding-left: 20px;
+}
+
+.task-name-cell {
+  background: linear-gradient(135deg, #FFFEF5 0%, #FFF9F0 100%);
+  padding: 15px;
+  font-weight: bold;
+  border: 2px solid #F0E8DC;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.task-icon {
+  font-size: 1.8em;
+}
+
+.schedule-cell {
+  padding: 15px;
+  border: 2px solid #F0E8DC;
+  text-align: center;
+  min-height: 60px;
+  transition: background-color 0.2s, transform 0.2s, border-color 0.2s;
+  position: relative;
+  background: #FFFEF8;
+}
+
+.schedule-cell.drag-over {
+  background-color: #E8F5E9;
+  border-color: #B4E7CE;
+  border-width: 3px;
+  transform: scale(1.02);
+}
+
+.schedule-cell.has-assignment {
+  background-color: #FFF9F0;
+  cursor: move;
+}
+
+.schedule-cell.dragging {
+  opacity: 0.5;
+  background-color: #E8F5E9;
+}
+
+.assignment {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: bold;
+  font-size: 1.1em;
+  position: relative;
+}
+
+.remove-btn {
+  background: linear-gradient(135deg, #FFB5A7 0%, #FFC4B0 100%);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s, transform 0.2s;
+  line-height: 1;
+}
+
+.remove-btn:hover {
+  background: linear-gradient(135deg, #FF9999 0%, #FFAAAA 100%);
+  transform: scale(1.1);
+}
+
+.remove-btn:active {
+  transform: scale(0.95);
+}
