@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
+import { TouchBackend } from 'react-dnd-touch-backend';
 import axios from 'axios';
 import WeeklySchedule from './components/WeeklySchedule';
 import TaskLibrary from './components/TaskLibrary';
 import PrintView from './components/PrintView';
 import ConfirmDialog from './components/ConfirmDialog';
+import MobileScheduleView from './components/MobileScheduleView';
 import './App.css';
 
 const API_URL = 'http://localhost:3001/api';
@@ -23,6 +25,9 @@ function App() {
   // Undo/Redo state
   const [history, setHistory] = useState([]);
   const [currentHistoryIndex, setCurrentHistoryIndex] = useState(-1);
+
+  // Mobile detection state
+  const [isMobile, setIsMobile] = useState(false);
 
   // Calculate the current week's Sunday
   const getCurrentSunday = () => {
@@ -74,6 +79,18 @@ function App() {
 
   const canUndo = currentHistoryIndex > 0;
   const canRedo = currentHistoryIndex < history.length - 1;
+
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     loadInitialData();
@@ -426,8 +443,40 @@ function App() {
     );
   }
 
+  // Determine which backend to use based on device
+  const dndBackend = isMobile ? TouchBackend : HTML5Backend;
+
+  // Render mobile view
+  if (isMobile) {
+    return (
+      <MobileScheduleView
+        tasks={tasks}
+        staff={staff}
+        assignments={assignments}
+        weekStartDate={weekStartDate}
+        showDays={showDays}
+        onNavigateWeek={navigateWeek}
+        onTaskDrop={handleTaskDrop}
+        onRemoveAssignment={handleRemoveAssignment}
+        onClearWeek={handleClearWeek}
+        onUndo={handleUndo}
+        onRedo={handleRedo}
+        canUndo={canUndo}
+        canRedo={canRedo}
+        onShowPrintView={() => setShowPrintView(true)}
+        onAddStaff={handleAddStaff}
+        onUpdateStaff={handleUpdateStaff}
+        onDeleteStaff={handleDeleteStaff}
+        onAddTask={handleAddTask}
+        onUpdateTask={handleUpdateTask}
+        onDeleteTask={handleDeleteTask}
+      />
+    );
+  }
+
+  // Render desktop view
   return (
-    <DndProvider backend={HTML5Backend}>
+    <DndProvider backend={dndBackend}>
       <div className="app">
         <header className="app-header">
           <div className="header-content">

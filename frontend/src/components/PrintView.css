@@ -360,3 +360,154 @@
     height: auto;
   }
 }
+
+/* Mobile responsive styles */
+@media (max-width: 768px) {
+  .print-view {
+    padding: 10px;
+  }
+
+  .print-controls {
+    margin-bottom: 15px;
+  }
+
+  .action-buttons {
+    gap: 10px;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    padding: 10px 20px;
+    font-size: 1em;
+    min-height: 44px;
+    min-width: 120px;
+  }
+
+  .print-content {
+    padding: 20px 15px;
+  }
+
+  .print-title {
+    font-size: 1.5em;
+  }
+
+  .week-dates {
+    font-size: 0.9em;
+  }
+
+  .flower-decoration {
+    font-size: 1.8em;
+  }
+
+  .print-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .print-table {
+    font-size: 0.85em;
+  }
+
+  .print-table th {
+    padding: 12px 8px;
+    font-size: 1.2em;
+  }
+
+  .print-table td {
+    padding: 12px 8px;
+  }
+
+  .print-table .task-column {
+    width: 120px;
+    font-size: 1.2em;
+  }
+
+  .print-table .task-icon {
+    font-size: 1.5em;
+  }
+
+  .print-table .task-name {
+    font-size: 1.2em;
+  }
+
+  .staff-name-print {
+    font-size: 1.2em;
+  }
+
+  .footer-decorations {
+    font-size: 1.5em;
+    gap: 10px;
+  }
+
+  .share-dropdown {
+    left: auto;
+    right: 0;
+  }
+
+  .share-option {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .print-title {
+    font-size: 1.2em;
+  }
+
+  .week-dates {
+    font-size: 0.8em;
+  }
+
+  .flower-decoration {
+    font-size: 1.5em;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .btn-primary,
+  .btn-secondary,
+  .share-dropdown-container {
+    width: 100%;
+  }
+
+  .print-table {
+    font-size: 0.75em;
+  }
+
+  .print-table th {
+    padding: 10px 6px;
+    font-size: 1em;
+  }
+
+  .print-table td {
+    padding: 10px 6px;
+  }
+
+  .print-table .task-column {
+    width: 100px;
+    font-size: 1em;
+  }
+
+  .print-table .task-icon {
+    font-size: 1.2em;
+  }
+
+  .print-table .task-name {
+    font-size: 1em;
+  }
+
+  .staff-name-print {
+    font-size: 1em;
+  }
+
+  .footer-decorations {
+    font-size: 1.2em;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+}
