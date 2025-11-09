@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import './MobileScheduleView.css';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 function MobileScheduleView({
@@ -47,9 +49,11 @@ function MobileScheduleView({
 
   const handleStaffSelect = (staffId) => {
     if (selectedTaskForAssignment) {
+      // Convert day index to day name (e.g., 0 -> "Sunday")
+      const dayName = DAYS[selectedTaskForAssignment.day];
       onTaskDrop(
         selectedTaskForAssignment.task.id,
-        selectedTaskForAssignment.day,
+        dayName,
         staffId
       );
     }
@@ -63,8 +67,10 @@ function MobileScheduleView({
     }
   };
 
-  const getAssignmentForTask = (task, day) => {
-    const key = `${day}-${task.name}`;
+  const getAssignmentForTask = (task, dayIndex) => {
+    // Convert day index to day name (e.g., 0 -> "Sunday")
+    const dayName = DAYS[dayIndex];
+    const key = `${dayName}-${task.name}`;
     return assignments[key];
   };
 
@@ -284,6 +290,9 @@ function StaffManagerModal({ staff, onAdd, onUpdate, onDelete, onClose }) {
   const [staffName, setStaffName] = useState('');
   const [staffColor, setStaffColor] = useState('#FF6B58');
   const [showForm, setShowForm] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState(null);
+  const [unlinkedUsers, setUnlinkedUsers] = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
 
   const SATURATED_COLORS = [
     '#FF6B58', '#E74B9C', '#9370DB', '#4A90E2', '#00BCD4', '#20B2AA',
@@ -291,13 +300,39 @@ function StaffManagerModal({ staff, onAdd, onUpdate, onDelete, onClose }) {
     '#BA55D3', '#4682B4', '#32CD32'
   ];
 
+  // Fetch unlinked users when form is shown
+  useEffect(() => {
+    if (showForm) {
+      fetchUnlinkedUsers();
+    }
+  }, [showForm]);
+
+  const fetchUnlinkedUsers = async () => {
+    setLoadingUsers(true);
+    try {
+      const response = await axios.get(`${API_URL}/users/unlinked`);
+      setUnlinkedUsers(response.data);
+    } catch (error) {
+      console.error('Error loading unlinked users:', error);
+      setUnlinkedUsers([]);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (staffName.trim()) {
+      const staffData = {
+        name: staffName.trim(),
+        color: staffColor,
+        user_id: selectedUserId
+      };
+
       if (editingStaff) {
-        onUpdate(editingStaff.id, { name: staffName.trim(), color: staffColor });
+        onUpdate(editingStaff.id, staffData);
       } else {
-        onAdd({ name: staffName.trim(), color: staffColor });
+        onAdd(staffData);
       }
       resetForm();
     }
@@ -307,6 +342,7 @@ function StaffManagerModal({ staff, onAdd, onUpdate, onDelete, onClose }) {
     setStaffName('');
     setStaffColor('#FF6B58');
     setEditingStaff(null);
+    setSelectedUserId(null);
     setShowForm(false);
   };
 
@@ -314,6 +350,7 @@ function StaffManagerModal({ staff, onAdd, onUpdate, onDelete, onClose }) {
     setEditingStaff(s);
     setStaffName(s.name);
     setStaffColor(s.color);
+    setSelectedUserId(s.user_id || null);
     setShowForm(true);
   };
 
@@ -347,6 +384,23 @@ function StaffManagerModal({ staff, onAdd, onUpdate, onDelete, onClose }) {
                 onChange={(e) => setStaffName(e.target.value)}
                 required
               />
+              <div className="user-picker-mobile">
+                <label>Link to User (Optional):</label>
+                <select
+                  value={selectedUserId || ''}
+                  onChange={(e) => setSelectedUserId(e.target.value ? parseInt(e.target.value) : null)}
+                  disabled={loadingUsers}
+                  className="user-select-mobile"
+                >
+                  <option value="">-- No User Link --</option>
+                  {unlinkedUsers.map(user => (
+                    <option key={user.id} value={user.id}>
+                      {user.name} ({user.email})
+                    </option>
+                  ))}
+                </select>
+                {loadingUsers && <span className="loading-hint-mobile">Loading...</span>}
+              </div>
               <div className="color-picker-mobile">
                 <label>Color:</label>
                 <div className="color-grid">

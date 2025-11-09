@@ -104,6 +104,47 @@
   border-color: #B4D7E8;
 }
 
+/* User Picker Styles */
+.user-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.user-picker label {
+  font-weight: bold;
+  color: #666;
+  font-size: 0.9em;
+}
+
+.user-select {
+  padding: 10px;
+  border: 2px solid #FFB5A7;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  background-color: white;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.user-select:focus {
+  outline: none;
+  border-color: #FF6B9D;
+}
+
+.user-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.loading-hint {
+  font-size: 0.85em;
+  color: #999;
+  font-style: italic;
+}
+
 .color-picker {
   display: flex;
   flex-direction: column;

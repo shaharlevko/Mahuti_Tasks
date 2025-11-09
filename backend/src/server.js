@@ -1,162 +1,437 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const db = require('./database');
+const passport = require('passport');
+const supabase = require('./db');
+const { requireAuth, requireRole } = require('./middleware/auth');
+const authRoutes = require('./routes/auth');
+const invitationsRoutes = require('./routes/invitations');
 
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 
 app.use(cors());
 app.use(bodyParser.json());
+app.use(passport.initialize());
 
-// Staff endpoints
-app.get('/api/staff', (req, res) => {
-  db.all('SELECT * FROM staff ORDER BY name', [], (err, rows) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json(rows);
-  });
-});
+// Authentication routes (public)
+app.use('/api/auth', authRoutes);
 
-app.post('/api/staff', (req, res) => {
-  const { name, role, color } = req.body;
-  db.run(
-    'INSERT INTO staff (name, role, color) VALUES (?, ?, ?)',
-    [name, role, color],
-    function (err) {
-      if (err) return res.status(500).json({ error: err.message });
-      res.json({ id: this.lastID, name, role, color });
+// Invitations routes (admin only, except validation endpoint)
+app.use('/api/invitations', invitationsRoutes);
+
+// Staff endpoints (protected)
+app.get('/api/staff', requireAuth, async (req, res) => {
+  try {
+    // Join with users table to include user info when user_id exists
+    const { data: staff, error } = await supabase
+      .from('staff')
+      .select(`
+        *,
+        users:user_id (
+          id,
+          email,
+          name,
+          role
+        )
+      `)
+      .order('name');
+
+    if (error) {
+      console.error('Error fetching staff:', error);
+      return res.status(500).json({ error: 'Failed to fetch staff' });
     }
-  );
+
+    res.json(staff);
+  } catch (error) {
+    console.error('Get staff error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
-app.put('/api/staff/:id', (req, res) => {
-  const { name, role, color } = req.body;
-  db.run(
-    'UPDATE staff SET name = ?, role = ?, color = ? WHERE id = ?',
-    [name, role, color, req.params.id],
-    (err) => {
-      if (err) return res.status(500).json({ error: err.message });
-      res.json({ id: req.params.id, name, role, color });
+app.post('/api/staff', requireAuth, requireRole('admin', 'manager'), async (req, res) => {
+  try {
+    const { name, role, color, user_id } = req.body;
+
+    if (!name || !color) {
+      return res.status(400).json({ error: 'Name and color are required' });
     }
-  );
-});
 
-app.delete('/api/staff/:id', (req, res) => {
-  db.run('DELETE FROM staff WHERE id = ?', [req.params.id], (err) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json({ message: 'Staff deleted successfully' });
-  });
-});
+    // Validate user_id if provided
+    if (user_id !== undefined && user_id !== null) {
+      // Check if user exists
+      const { data: user, error: userError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('id', user_id)
+        .single();
 
-// Tasks endpoints
-app.get('/api/tasks', (req, res) => {
-  db.all('SELECT * FROM tasks ORDER BY order_index, id', [], (err, rows) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json(rows);
-  });
-});
-
-app.post('/api/tasks', (req, res) => {
-  const { name, icon, category, color } = req.body;
-
-  // Get the highest order_index and set new task to be last
-  db.get('SELECT MAX(order_index) as max_order FROM tasks', [], (err, row) => {
-    if (err) return res.status(500).json({ error: err.message });
-
-    const newOrderIndex = (row.max_order || -1) + 1;
-
-    db.run(
-      'INSERT INTO tasks (name, icon, category, color, order_index) VALUES (?, ?, ?, ?, ?)',
-      [name, icon, category, color, newOrderIndex],
-      function (err) {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ id: this.lastID, name, icon, category, color, order_index: newOrderIndex });
+      if (userError || !user) {
+        return res.status(400).json({ error: 'Invalid user_id: User not found' });
       }
-    );
-  });
+
+      // Check if user is already linked to another staff member
+      const { data: existingStaff, error: linkError } = await supabase
+        .from('staff')
+        .select('id')
+        .eq('user_id', user_id)
+        .maybeSingle();
+
+      if (linkError && linkError.code !== 'PGRST116') { // PGRST116 means no rows found, which is fine
+        console.error('Error checking existing staff link:', linkError);
+        return res.status(500).json({ error: 'Failed to validate user link' });
+      }
+
+      if (existingStaff) {
+        return res.status(409).json({ error: 'This user is already linked to another staff member' });
+      }
+    }
+
+    const { data: newStaff, error } = await supabase
+      .from('staff')
+      .insert({ name, role, color, user_id })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating staff:', error);
+      return res.status(500).json({ error: 'Failed to create staff member' });
+    }
+
+    res.json(newStaff);
+  } catch (error) {
+    console.error('Create staff error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
-app.put('/api/tasks/:id', (req, res) => {
-  const { name, icon, category, color } = req.body;
-  db.run(
-    'UPDATE tasks SET name = ?, icon = ?, category = ?, color = ? WHERE id = ?',
-    [name, icon, category, color, req.params.id],
-    (err) => {
-      if (err) return res.status(500).json({ error: err.message });
-      res.json({ id: req.params.id, name, icon, category, color });
+app.put('/api/staff/:id', requireAuth, requireRole('admin', 'manager'), async (req, res) => {
+  try {
+    const { name, role, color, user_id } = req.body;
+    const { id } = req.params;
+
+    // Validate user_id if provided
+    if (user_id !== undefined && user_id !== null) {
+      // Check if user exists
+      const { data: user, error: userError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('id', user_id)
+        .single();
+
+      if (userError || !user) {
+        return res.status(400).json({ error: 'Invalid user_id: User not found' });
+      }
+
+      // Check if user is already linked to a DIFFERENT staff member
+      const { data: existingStaff, error: linkError } = await supabase
+        .from('staff')
+        .select('id')
+        .eq('user_id', user_id)
+        .neq('id', id) // Exclude current staff member
+        .maybeSingle();
+
+      if (linkError && linkError.code !== 'PGRST116') { // PGRST116 means no rows found, which is fine
+        console.error('Error checking existing staff link:', linkError);
+        return res.status(500).json({ error: 'Failed to validate user link' });
+      }
+
+      if (existingStaff) {
+        return res.status(409).json({ error: 'This user is already linked to another staff member' });
+      }
     }
-  );
+
+    const { data: updatedStaff, error } = await supabase
+      .from('staff')
+      .update({ name, role, color, user_id, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating staff:', error);
+      return res.status(500).json({ error: 'Failed to update staff member' });
+    }
+
+    if (!updatedStaff) {
+      return res.status(404).json({ error: 'Staff member not found' });
+    }
+
+    res.json(updatedStaff);
+  } catch (error) {
+    console.error('Update staff error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.delete('/api/staff/:id', requireAuth, requireRole('admin', 'manager'), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { error } = await supabase
+      .from('staff')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting staff:', error);
+      return res.status(500).json({ error: 'Failed to delete staff member' });
+    }
+
+    res.json({ message: 'Staff deleted successfully' });
+  } catch (error) {
+    console.error('Delete staff error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get unlinked users for staff assignment dropdown
+app.get('/api/users/unlinked', requireAuth, requireRole('admin', 'manager'), async (req, res) => {
+  try {
+    // Get all user IDs that are already linked to staff
+    const { data: linkedStaff, error: staffError } = await supabase
+      .from('staff')
+      .select('user_id')
+      .not('user_id', 'is', null);
+
+    if (staffError) {
+      console.error('Error fetching linked staff:', staffError);
+      return res.status(500).json({ error: 'Failed to fetch linked users' });
+    }
+
+    const linkedUserIds = linkedStaff.map(s => s.user_id);
+
+    // Get all users that are NOT in the linked list
+    let query = supabase
+      .from('users')
+      .select('id, email, name, role')
+      .order('name');
+
+    if (linkedUserIds.length > 0) {
+      query = query.not('id', 'in', `(${linkedUserIds.join(',')})`);
+    }
+
+    const { data: unlinkedUsers, error } = await query;
+
+    if (error) {
+      console.error('Error fetching unlinked users:', error);
+      return res.status(500).json({ error: 'Failed to fetch unlinked users' });
+    }
+
+    res.json(unlinkedUsers);
+  } catch (error) {
+    console.error('Get unlinked users error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Tasks endpoints (protected)
+app.get('/api/tasks', requireAuth, async (req, res) => {
+  try {
+    const { data: tasks, error } = await supabase
+      .from('tasks')
+      .select('*')
+      .order('order_index')
+      .order('id');
+
+    if (error) {
+      console.error('Error fetching tasks:', error);
+      return res.status(500).json({ error: 'Failed to fetch tasks' });
+    }
+
+    res.json(tasks);
+  } catch (error) {
+    console.error('Get tasks error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/api/tasks', requireAuth, requireRole('admin', 'manager'), async (req, res) => {
+  try {
+    const { name, icon, category, color } = req.body;
+
+    if (!name) {
+      return res.status(400).json({ error: 'Name is required' });
+    }
+
+    // Get the highest order_index and set new task to be last
+    const { data: maxOrderData, error: maxError } = await supabase
+      .from('tasks')
+      .select('order_index')
+      .order('order_index', { ascending: false })
+      .limit(1);
+
+    if (maxError) {
+      console.error('Error getting max order:', maxError);
+      return res.status(500).json({ error: 'Failed to determine task order' });
+    }
+
+    const newOrderIndex = (maxOrderData?.[0]?.order_index ?? -1) + 1;
+
+    const { data: newTask, error } = await supabase
+      .from('tasks')
+      .insert({ name, icon, category, color, order_index: newOrderIndex })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating task:', error);
+      return res.status(500).json({ error: 'Failed to create task' });
+    }
+
+    res.json(newTask);
+  } catch (error) {
+    console.error('Create task error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.put('/api/tasks/:id', requireAuth, requireRole('admin', 'manager'), async (req, res) => {
+  try {
+    const { name, icon, category, color } = req.body;
+    const { id } = req.params;
+
+    const { data: updatedTask, error } = await supabase
+      .from('tasks')
+      .update({ name, icon, category, color, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating task:', error);
+      return res.status(500).json({ error: 'Failed to update task' });
+    }
+
+    if (!updatedTask) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    res.json(updatedTask);
+  } catch (error) {
+    console.error('Update task error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 // Reorder tasks endpoint
-app.put('/api/tasks/reorder', (req, res) => {
-  const { taskOrders } = req.body; // Array of { id, order_index }
+app.put('/api/tasks/reorder', requireAuth, requireRole('admin', 'manager'), async (req, res) => {
+  try {
+    const { taskOrders } = req.body; // Array of { id, order_index }
 
-  if (!Array.isArray(taskOrders) || taskOrders.length === 0) {
-    return res.status(400).json({ error: 'taskOrders must be a non-empty array' });
+    if (!Array.isArray(taskOrders) || taskOrders.length === 0) {
+      return res.status(400).json({ error: 'taskOrders must be a non-empty array' });
+    }
+
+    // Update all tasks with their new order_index values
+    const updatePromises = taskOrders.map(({ id, order_index }) =>
+      supabase
+        .from('tasks')
+        .update({ order_index })
+        .eq('id', id)
+    );
+
+    const results = await Promise.all(updatePromises);
+
+    // Check for errors
+    const errors = results.filter(result => result.error);
+    if (errors.length > 0) {
+      console.error('Error reordering tasks:', errors);
+      return res.status(500).json({ error: 'Some updates failed', details: errors });
+    }
+
+    res.json({ message: 'Task order updated successfully', count: taskOrders.length });
+  } catch (error) {
+    console.error('Reorder tasks error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
-
-  // Update all tasks with their new order_index values
-  const updateStmt = db.prepare('UPDATE tasks SET order_index = ? WHERE id = ?');
-
-  let completed = 0;
-  let errors = [];
-
-  taskOrders.forEach(({ id, order_index }) => {
-    updateStmt.run(order_index, id, (err) => {
-      if (err) errors.push(err);
-      completed++;
-
-      if (completed === taskOrders.length) {
-        updateStmt.finalize();
-
-        if (errors.length > 0) {
-          return res.status(500).json({ error: 'Some updates failed', details: errors });
-        }
-
-        res.json({ message: 'Task order updated successfully', count: taskOrders.length });
-      }
-    });
-  });
 });
 
-app.delete('/api/tasks/:id', (req, res) => {
-  db.run('DELETE FROM tasks WHERE id = ?', [req.params.id], (err) => {
-    if (err) return res.status(500).json({ error: err.message });
+app.delete('/api/tasks/:id', requireAuth, requireRole('admin', 'manager'), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { error } = await supabase
+      .from('tasks')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting task:', error);
+      return res.status(500).json({ error: 'Failed to delete task' });
+    }
+
     res.json({ message: 'Task deleted successfully' });
-  });
+  } catch (error) {
+    console.error('Delete task error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
-// Schedules endpoints
-app.get('/api/schedules', (req, res) => {
-  db.all('SELECT * FROM schedules ORDER BY week_start DESC', [], (err, rows) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json(rows);
-  });
+// Schedules endpoints (protected)
+app.get('/api/schedules', requireAuth, async (req, res) => {
+  try {
+    const { data: schedules, error } = await supabase
+      .from('schedules')
+      .select('*')
+      .order('week_start', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching schedules:', error);
+      return res.status(500).json({ error: 'Failed to fetch schedules' });
+    }
+
+    res.json(schedules);
+  } catch (error) {
+    console.error('Get schedules error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 // Get or create schedule by week start date
-app.get('/api/schedules/by-week/:week_start', (req, res) => {
-  const weekStart = req.params.week_start;
+app.get('/api/schedules/by-week/:week_start', requireAuth, async (req, res) => {
+  try {
+    const weekStart = req.params.week_start;
 
-  db.get('SELECT * FROM schedules WHERE week_start = ?', [weekStart], (err, schedule) => {
-    if (err) return res.status(500).json({ error: err.message });
+    // Try to find existing schedule
+    const { data: schedule, error: fetchError } = await supabase
+      .from('schedules')
+      .select('*')
+      .eq('week_start', weekStart)
+      .single();
+
+    if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 = no rows found
+      console.error('Error fetching schedule:', fetchError);
+      return res.status(500).json({ error: 'Failed to fetch schedule' });
+    }
 
     if (schedule) {
       // Schedule exists, load with assignments
-      db.all(
-        `SELECT sa.*, t.name as task_name, t.icon as task_icon, t.color as task_color,
-                s.name as staff_name, s.color as staff_color
-         FROM schedule_assignments sa
-         JOIN tasks t ON sa.task_id = t.id
-         JOIN staff s ON sa.staff_id = s.id
-         WHERE sa.schedule_id = ?`,
-        [schedule.id],
-        (err, assignments) => {
-          if (err) return res.status(500).json({ error: err.message });
-          res.json({ ...schedule, assignments });
-        }
-      );
+      const { data: assignments, error: assignmentsError } = await supabase
+        .from('schedule_assignments')
+        .select(`
+          *,
+          tasks!inner(name, icon, color),
+          staff!inner(name, color)
+        `)
+        .eq('schedule_id', schedule.id);
+
+      if (assignmentsError) {
+        console.error('Error fetching assignments:', assignmentsError);
+        return res.status(500).json({ error: 'Failed to fetch assignments' });
+      }
+
+      // Transform the nested structure to match old format
+      const transformedAssignments = assignments.map(a => ({
+        ...a,
+        task_name: a.tasks.name,
+        task_icon: a.tasks.icon,
+        task_color: a.tasks.color,
+        staff_name: a.staff.name,
+        staff_color: a.staff.color
+      }));
+
+      res.json({ ...schedule, assignments: transformedAssignments });
     } else {
       // Create new schedule for this week
       const weekStartDate = new Date(weekStart);
@@ -165,205 +440,472 @@ app.get('/api/schedules/by-week/:week_start', (req, res) => {
       const weekEnd = weekEndDate.toISOString().split('T')[0];
       const name = `Week of ${weekStartDate.toLocaleDateString()}`;
 
-      db.run(
-        'INSERT INTO schedules (week_start, week_end, name) VALUES (?, ?, ?)',
-        [weekStart, weekEnd, name],
-        function (err) {
-          if (err) return res.status(500).json({ error: err.message });
-          res.json({
-            id: this.lastID,
-            week_start: weekStart,
-            week_end: weekEnd,
-            name,
-            assignments: []
-          });
-        }
-      );
+      const { data: newSchedule, error: insertError } = await supabase
+        .from('schedules')
+        .insert({ week_start: weekStart, week_end: weekEnd, name })
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error('Error creating schedule:', insertError);
+        return res.status(500).json({ error: 'Failed to create schedule' });
+      }
+
+      res.json({ ...newSchedule, assignments: [] });
     }
-  });
+  } catch (error) {
+    console.error('Get/create schedule by week error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
-app.get('/api/schedules/:id', (req, res) => {
-  db.get('SELECT * FROM schedules WHERE id = ?', [req.params.id], (err, row) => {
-    if (err) return res.status(500).json({ error: err.message });
-    if (!row) return res.status(404).json({ error: 'Schedule not found' });
+app.get('/api/schedules/:id', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Fetch schedule
+    const { data: schedule, error: scheduleError } = await supabase
+      .from('schedules')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (scheduleError) {
+      console.error('Error fetching schedule:', scheduleError);
+      return res.status(404).json({ error: 'Schedule not found' });
+    }
+
+    if (!schedule) {
+      return res.status(404).json({ error: 'Schedule not found' });
+    }
 
     // Get assignments for this schedule
-    db.all(
-      `SELECT sa.*, t.name as task_name, t.icon as task_icon, t.color as task_color,
-              s.name as staff_name, s.color as staff_color
-       FROM schedule_assignments sa
-       JOIN tasks t ON sa.task_id = t.id
-       JOIN staff s ON sa.staff_id = s.id
-       WHERE sa.schedule_id = ?`,
-      [req.params.id],
-      (err, assignments) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ ...row, assignments });
-      }
-    );
-  });
-});
+    const { data: assignments, error: assignmentsError } = await supabase
+      .from('schedule_assignments')
+      .select(`
+        *,
+        tasks!inner(name, icon, color),
+        staff!inner(name, color)
+      `)
+      .eq('schedule_id', id);
 
-app.post('/api/schedules', (req, res) => {
-  const { week_start, week_end, name } = req.body;
-  db.run(
-    'INSERT INTO schedules (week_start, week_end, name) VALUES (?, ?, ?)',
-    [week_start, week_end, name],
-    function (err) {
-      if (err) return res.status(500).json({ error: err.message });
-      res.json({ id: this.lastID, week_start, week_end, name });
+    if (assignmentsError) {
+      console.error('Error fetching assignments:', assignmentsError);
+      return res.status(500).json({ error: 'Failed to fetch assignments' });
     }
-  );
+
+    // Transform the nested structure to match old format
+    const transformedAssignments = assignments.map(a => ({
+      ...a,
+      task_name: a.tasks.name,
+      task_icon: a.tasks.icon,
+      task_color: a.tasks.color,
+      staff_name: a.staff.name,
+      staff_color: a.staff.color
+    }));
+
+    res.json({ ...schedule, assignments: transformedAssignments });
+  } catch (error) {
+    console.error('Get schedule error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
-app.put('/api/schedules/:id', (req, res) => {
-  const { name } = req.body;
-  db.run(
-    'UPDATE schedules SET name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-    [name, req.params.id],
-    (err) => {
-      if (err) return res.status(500).json({ error: err.message });
-      res.json({ id: req.params.id, name });
+app.post('/api/schedules', requireAuth, requireRole('admin', 'manager'), async (req, res) => {
+  try {
+    const { week_start, week_end, name } = req.body;
+
+    if (!week_start || !week_end || !name) {
+      return res.status(400).json({ error: 'week_start, week_end, and name are required' });
     }
-  );
+
+    const { data: newSchedule, error } = await supabase
+      .from('schedules')
+      .insert({ week_start, week_end, name })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating schedule:', error);
+      return res.status(500).json({ error: 'Failed to create schedule' });
+    }
+
+    res.json(newSchedule);
+  } catch (error) {
+    console.error('Create schedule error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
-app.delete('/api/schedules/:id', (req, res) => {
-  db.run('DELETE FROM schedules WHERE id = ?', [req.params.id], (err) => {
-    if (err) return res.status(500).json({ error: err.message });
+app.put('/api/schedules/:id', requireAuth, requireRole('admin', 'manager'), async (req, res) => {
+  try {
+    const { name } = req.body;
+    const { id } = req.params;
+
+    if (!name) {
+      return res.status(400).json({ error: 'Name is required' });
+    }
+
+    const { data: updatedSchedule, error } = await supabase
+      .from('schedules')
+      .update({ name, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating schedule:', error);
+      return res.status(500).json({ error: 'Failed to update schedule' });
+    }
+
+    if (!updatedSchedule) {
+      return res.status(404).json({ error: 'Schedule not found' });
+    }
+
+    res.json(updatedSchedule);
+  } catch (error) {
+    console.error('Update schedule error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.delete('/api/schedules/:id', requireAuth, requireRole('admin', 'manager'), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { error } = await supabase
+      .from('schedules')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting schedule:', error);
+      return res.status(500).json({ error: 'Failed to delete schedule' });
+    }
+
     res.json({ message: 'Schedule deleted successfully' });
-  });
+  } catch (error) {
+    console.error('Delete schedule error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
-// Schedule assignments endpoints
-app.post('/api/assignments', (req, res) => {
-  const { schedule_id, task_id, staff_id, day_of_week, time_slot, notes } = req.body;
+// Schedule assignments endpoints (protected)
+app.post('/api/assignments', requireAuth, requireRole('admin', 'manager'), async (req, res) => {
+  try {
+    const { schedule_id, task_id, staff_id, day_of_week, time_slot, notes } = req.body;
 
-  // Check for conflicts
-  db.get(
-    'SELECT * FROM schedule_assignments WHERE schedule_id = ? AND staff_id = ? AND day_of_week = ? AND time_slot = ?',
-    [schedule_id, staff_id, day_of_week, time_slot],
-    (err, existing) => {
-      if (err) return res.status(500).json({ error: err.message });
-      if (existing) {
-        return res.status(409).json({ error: 'Conflict: Staff member already assigned at this time' });
-      }
+    console.log('Received assignment request:', { schedule_id, task_id, staff_id, day_of_week, time_slot, notes });
 
-      db.run(
-        'INSERT INTO schedule_assignments (schedule_id, task_id, staff_id, day_of_week, time_slot, notes) VALUES (?, ?, ?, ?, ?, ?)',
-        [schedule_id, task_id, staff_id, day_of_week, time_slot, notes],
-        function (err) {
-          if (err) return res.status(500).json({ error: err.message });
-          res.json({ id: this.lastID, schedule_id, task_id, staff_id, day_of_week, time_slot, notes });
-        }
-      );
+    // Use explicit null/undefined checks because day_of_week can be 0 (Sunday)
+    if (!schedule_id || !task_id || !staff_id || day_of_week === null || day_of_week === undefined || !time_slot) {
+      console.log('Validation failed. Missing fields:', {
+        schedule_id: !schedule_id,
+        task_id: !task_id,
+        staff_id: !staff_id,
+        day_of_week: day_of_week === null || day_of_week === undefined,
+        time_slot: !time_slot
+      });
+      return res.status(400).json({ error: 'schedule_id, task_id, staff_id, day_of_week, and time_slot are required' });
     }
-  );
-});
 
-app.put('/api/assignments/:id', (req, res) => {
-  const { task_id, staff_id, day_of_week, time_slot, notes } = req.body;
-  db.run(
-    'UPDATE schedule_assignments SET task_id = ?, staff_id = ?, day_of_week = ?, time_slot = ?, notes = ? WHERE id = ?',
-    [task_id, staff_id, day_of_week, time_slot, notes, req.params.id],
-    (err) => {
-      if (err) return res.status(500).json({ error: err.message });
-      res.json({ id: req.params.id, task_id, staff_id, day_of_week, time_slot, notes });
+    // Check for conflicts
+    const { data: existing, error: conflictError } = await supabase
+      .from('schedule_assignments')
+      .select('*')
+      .eq('schedule_id', schedule_id)
+      .eq('staff_id', staff_id)
+      .eq('day_of_week', day_of_week)
+      .eq('time_slot', time_slot)
+      .single();
+
+    if (conflictError && conflictError.code !== 'PGRST116') { // PGRST116 = no rows found
+      console.error('Error checking for conflicts:', conflictError);
+      return res.status(500).json({ error: 'Failed to check for conflicts' });
     }
-  );
+
+    if (existing) {
+      return res.status(409).json({ error: 'Conflict: Staff member already assigned at this time' });
+    }
+
+    const { data: newAssignment, error } = await supabase
+      .from('schedule_assignments')
+      .insert({ schedule_id, task_id, staff_id, day_of_week, time_slot, notes })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating assignment:', error);
+      return res.status(500).json({ error: 'Failed to create assignment' });
+    }
+
+    res.json(newAssignment);
+  } catch (error) {
+    console.error('Create assignment error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
-app.delete('/api/assignments/:id', (req, res) => {
-  db.run('DELETE FROM schedule_assignments WHERE id = ?', [req.params.id], (err) => {
-    if (err) return res.status(500).json({ error: err.message });
+app.put('/api/assignments/:id', requireAuth, requireRole('admin', 'manager'), async (req, res) => {
+  try {
+    const { task_id, staff_id, day_of_week, time_slot, notes } = req.body;
+    const { id } = req.params;
+
+    const { data: updatedAssignment, error } = await supabase
+      .from('schedule_assignments')
+      .update({ task_id, staff_id, day_of_week, time_slot, notes })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating assignment:', error);
+      return res.status(500).json({ error: 'Failed to update assignment' });
+    }
+
+    if (!updatedAssignment) {
+      return res.status(404).json({ error: 'Assignment not found' });
+    }
+
+    res.json(updatedAssignment);
+  } catch (error) {
+    console.error('Update assignment error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.delete('/api/assignments/:id', requireAuth, requireRole('admin', 'manager'), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { error } = await supabase
+      .from('schedule_assignments')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting assignment:', error);
+      return res.status(500).json({ error: 'Failed to delete assignment' });
+    }
+
     res.json({ message: 'Assignment deleted successfully' });
-  });
+  } catch (error) {
+    console.error('Delete assignment error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 // Clear all assignments for a schedule
-app.delete('/api/schedules/:id/assignments', (req, res) => {
-  const scheduleId = req.params.id;
+app.delete('/api/schedules/:id/assignments', requireAuth, requireRole('admin', 'manager'), async (req, res) => {
+  try {
+    const scheduleId = req.params.id;
 
-  db.run('DELETE FROM schedule_assignments WHERE schedule_id = ?', [scheduleId], function(err) {
-    if (err) return res.status(500).json({ error: err.message });
+    const { data: deletedAssignments, error } = await supabase
+      .from('schedule_assignments')
+      .delete()
+      .eq('schedule_id', scheduleId)
+      .select();
+
+    if (error) {
+      console.error('Error clearing assignments:', error);
+      return res.status(500).json({ error: 'Failed to clear assignments' });
+    }
+
     res.json({
       message: 'All assignments cleared successfully',
-      deletedCount: this.changes
+      deletedCount: deletedAssignments?.length || 0
     });
-  });
+  } catch (error) {
+    console.error('Clear assignments error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
-// Templates endpoints
-app.get('/api/templates', (req, res) => {
-  db.all('SELECT * FROM templates ORDER BY name', [], (err, rows) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json(rows.map(row => ({
-      ...row,
-      template_data: JSON.parse(row.template_data)
-    })));
-  });
-});
+// Templates endpoints (protected)
+app.get('/api/templates', requireAuth, async (req, res) => {
+  try {
+    const { data: templates, error } = await supabase
+      .from('templates')
+      .select('*')
+      .order('name');
 
-app.post('/api/templates', (req, res) => {
-  const { name, description, template_data } = req.body;
-  db.run(
-    'INSERT INTO templates (name, description, template_data) VALUES (?, ?, ?)',
-    [name, description, JSON.stringify(template_data)],
-    function (err) {
-      if (err) return res.status(500).json({ error: err.message });
-      res.json({ id: this.lastID, name, description, template_data });
+    if (error) {
+      console.error('Error fetching templates:', error);
+      return res.status(500).json({ error: 'Failed to fetch templates' });
     }
-  );
+
+    // Parse template_data JSON
+    const parsedTemplates = templates.map(template => ({
+      ...template,
+      template_data: typeof template.template_data === 'string'
+        ? JSON.parse(template.template_data)
+        : template.template_data
+    }));
+
+    res.json(parsedTemplates);
+  } catch (error) {
+    console.error('Get templates error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
-app.delete('/api/templates/:id', (req, res) => {
-  db.run('DELETE FROM templates WHERE id = ?', [req.params.id], (err) => {
-    if (err) return res.status(500).json({ error: err.message });
+app.post('/api/templates', requireAuth, requireRole('admin', 'manager'), async (req, res) => {
+  try {
+    const { name, description, template_data } = req.body;
+
+    if (!name || !template_data) {
+      return res.status(400).json({ error: 'Name and template_data are required' });
+    }
+
+    const { data: newTemplate, error } = await supabase
+      .from('templates')
+      .insert({
+        name,
+        description,
+        template_data: typeof template_data === 'string' ? template_data : JSON.stringify(template_data)
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating template:', error);
+      return res.status(500).json({ error: 'Failed to create template' });
+    }
+
+    res.json({
+      ...newTemplate,
+      template_data: typeof newTemplate.template_data === 'string'
+        ? JSON.parse(newTemplate.template_data)
+        : newTemplate.template_data
+    });
+  } catch (error) {
+    console.error('Create template error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.delete('/api/templates/:id', requireAuth, requireRole('admin', 'manager'), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { error } = await supabase
+      .from('templates')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting template:', error);
+      return res.status(500).json({ error: 'Failed to delete template' });
+    }
+
     res.json({ message: 'Template deleted successfully' });
-  });
+  } catch (error) {
+    console.error('Delete template error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
-// Cleanup endpoint to remove duplicates
-app.post('/api/cleanup', (req, res) => {
-  // Remove duplicate staff members, keeping only the first occurrence
-  db.run(`
-    DELETE FROM staff
-    WHERE id NOT IN (
-      SELECT MIN(id)
-      FROM staff
-      GROUP BY name
-    )
-  `, (err) => {
-    if (err) {
-      console.error('Error cleaning up staff duplicates:', err);
-      return res.status(500).json({ error: err.message });
-    }
+// Cleanup endpoint to remove duplicates (admin only)
+app.post('/api/cleanup', requireAuth, requireRole('admin'), async (req, res) => {
+  try {
+    // Remove duplicate staff members, keeping only the first occurrence (lowest ID)
+    // First, find all duplicate names
+    const { data: duplicateStaff, error: staffError } = await supabase.rpc('remove_duplicate_staff');
 
-    // Remove duplicate tasks, keeping only the first occurrence
-    db.run(`
-      DELETE FROM tasks
-      WHERE id NOT IN (
-        SELECT MIN(id)
-        FROM tasks
-        GROUP BY name
-      )
-    `, (err) => {
-      if (err) {
-        console.error('Error cleaning up task duplicates:', err);
-        return res.status(500).json({ error: err.message });
+    if (staffError) {
+      // If the RPC function doesn't exist, we'll do it manually
+      console.log('RPC function not found, cleaning up manually');
+
+      // Get all staff grouped by name
+      const { data: allStaff, error: fetchStaffError } = await supabase
+        .from('staff')
+        .select('*')
+        .order('name')
+        .order('id');
+
+      if (fetchStaffError) {
+        console.error('Error fetching staff:', fetchStaffError);
+        return res.status(500).json({ error: 'Failed to fetch staff' });
+      }
+
+      // Find duplicates and keep only first occurrence
+      const staffByName = {};
+      const toDelete = [];
+
+      allStaff.forEach(staff => {
+        if (!staffByName[staff.name]) {
+          staffByName[staff.name] = staff.id;
+        } else {
+          toDelete.push(staff.id);
+        }
+      });
+
+      // Delete duplicates
+      if (toDelete.length > 0) {
+        const { error: deleteStaffError } = await supabase
+          .from('staff')
+          .delete()
+          .in('id', toDelete);
+
+        if (deleteStaffError) {
+          console.error('Error deleting duplicate staff:', deleteStaffError);
+          return res.status(500).json({ error: 'Failed to delete duplicate staff' });
+        }
+      }
+
+      // Do the same for tasks
+      const { data: allTasks, error: fetchTasksError } = await supabase
+        .from('tasks')
+        .select('*')
+        .order('name')
+        .order('id');
+
+      if (fetchTasksError) {
+        console.error('Error fetching tasks:', fetchTasksError);
+        return res.status(500).json({ error: 'Failed to fetch tasks' });
+      }
+
+      const tasksByName = {};
+      const tasksToDelete = [];
+
+      allTasks.forEach(task => {
+        if (!tasksByName[task.name]) {
+          tasksByName[task.name] = task.id;
+        } else {
+          tasksToDelete.push(task.id);
+        }
+      });
+
+      if (tasksToDelete.length > 0) {
+        const { error: deleteTasksError } = await supabase
+          .from('tasks')
+          .delete()
+          .in('id', tasksToDelete);
+
+        if (deleteTasksError) {
+          console.error('Error deleting duplicate tasks:', deleteTasksError);
+          return res.status(500).json({ error: 'Failed to delete duplicate tasks' });
+        }
       }
 
       res.json({
         message: 'Database cleanup completed successfully',
+        note: 'Duplicate staff and tasks have been removed',
+        staffDeleted: toDelete.length,
+        tasksDeleted: tasksToDelete.length
+      });
+    } else {
+      res.json({
+        message: 'Database cleanup completed successfully',
         note: 'Duplicate staff and tasks have been removed'
       });
-    });
-  });
+    }
+  } catch (error) {
+    console.error('Cleanup error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 app.listen(PORT, () => {
   console.log(`Mahuti Tasks API running on http://localhost:${PORT}`);
 });
-
- 

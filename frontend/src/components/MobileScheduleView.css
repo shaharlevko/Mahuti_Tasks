@@ -532,6 +532,47 @@
   border-color: #B4D7E8;
 }
 
+/* User Picker Mobile Styles */
+.user-picker-mobile {
+  margin-bottom: 15px;
+}
+
+.user-picker-mobile label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: 600;
+  color: #555;
+}
+
+.user-select-mobile {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #FFB5A7;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 16px;
+  background-color: white;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.user-select-mobile:focus {
+  outline: none;
+  border-color: #FF6B9D;
+}
+
+.user-select-mobile:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.loading-hint-mobile {
+  font-size: 0.85em;
+  color: #999;
+  font-style: italic;
+  margin-top: 5px;
+}
+
 .color-picker-mobile {
   margin-bottom: 15px;
 }

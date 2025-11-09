@@ -1,0 +1,213 @@
+.invite-accept {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #FFF9F0 0%, #FFE4E1 100%);
+  padding: 20px;
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+}
+
+.invite-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  padding: 40px;
+  max-width: 500px;
+  width: 100%;
+}
+
+.invite-header {
+  text-align: center;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.invite-header h1 {
+  color: #FF6B9D;
+  margin: 0;
+  font-size: 32px;
+}
+
+.invite-header .flower-icon {
+  font-size: 28px;
+}
+
+.invite-accept h2 {
+  text-align: center;
+  color: #FF6B9D;
+  margin: 10px 0;
+  font-size: 26px;
+}
+
+.invite-subtitle {
+  text-align: center;
+  color: #666;
+  margin-bottom: 25px;
+  font-size: 15px;
+}
+
+.invite-info {
+  background-color: #FFF4E6;
+  border-left: 4px solid #FFB5A7;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 25px;
+}
+
+.invite-info p {
+  margin: 8px 0;
+  color: #333;
+}
+
+.role-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.role-badge.role-admin {
+  background-color: #FFB5A7;
+  color: #8B0000;
+}
+
+.role-badge.role-manager {
+  background-color: #B4D7E8;
+  color: #00438C;
+}
+
+.role-badge.role-staff {
+  background-color: #C7ECDE;
+  color: #006644;
+}
+
+.error-message {
+  background-color: #FFE4E1;
+  color: #CC0000;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  text-align: center;
+  font-weight: bold;
+}
+
+.error-container {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.error-icon {
+  font-size: 48px;
+  margin-bottom: 15px;
+}
+
+.error-container h2 {
+  color: #CC0000;
+  margin: 15px 0;
+}
+
+.error-help {
+  color: #666;
+  margin: 15px 0;
+  line-height: 1.6;
+}
+
+.invite-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.invite-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.invite-form label {
+  font-weight: bold;
+  color: #333;
+  font-size: 14px;
+}
+
+.invite-form input {
+  padding: 12px;
+  border: 2px solid #FFB5A7;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 15px;
+  transition: border-color 0.2s;
+}
+
+.invite-form input:focus {
+  outline: none;
+  border-color: #FF6B9D;
+}
+
+.invite-form input:disabled {
+  background-color: #F5F5F5;
+  cursor: not-allowed;
+}
+
+.btn-accept {
+  padding: 14px 24px;
+  background: linear-gradient(135deg, #C7ECDE 0%, #B0E0CF 100%);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: bold;
+  color: #006644;
+  transition: transform 0.2s;
+  margin-top: 10px;
+}
+
+.btn-accept:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.btn-accept:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-home {
+  padding: 12px 24px;
+  background-color: #B4D7E8;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: bold;
+  color: #00438C;
+  margin-top: 20px;
+}
+
+.btn-home:hover {
+  background-color: #A8D8EA;
+}
+
+.invite-footer {
+  text-align: center;
+  color: #999;
+  font-size: 12px;
+  margin-top: 25px;
+  line-height: 1.5;
+}
+
+.loading-spinner {
+  text-align: center;
+  padding: 60px 20px;
+  color: #FF6B9D;
+  font-size: 18px;
+  font-weight: bold;
+}

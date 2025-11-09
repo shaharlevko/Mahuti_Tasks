@@ -62,7 +62,7 @@ const EMOJI_CATEGORIES = {
   ]
 };
 
-function ScheduleCell({ day, task, staff, assignments, onTaskDrop, onRemoveAssignment, onMoveAssignment, isEditing, onStartEdit, onCancelEdit, onSelectStaff }) {
+function ScheduleCell({ day, task, staff, assignments, onTaskDrop, onRemoveAssignment, onMoveAssignment, isEditing, onStartEdit, onCancelEdit, onSelectStaff, canEdit = true }) {
   const key = `${day}-${task.name}`;
   const assignment = assignments[key];
 
@@ -70,14 +70,15 @@ function ScheduleCell({ day, task, staff, assignments, onTaskDrop, onRemoveAssig
   const [{ isDragging }, drag] = useDrag({
     type: 'ASSIGNMENT',
     item: () => assignment ? { fromKey: key, assignment } : null,
-    canDrag: () => !!assignment,
+    canDrag: () => canEdit && !!assignment,
     collect: (monitor) => ({
       isDragging: monitor.isDragging()
     })
-  }, [assignment, key]);
+  }, [assignment, key, canEdit]);
 
   const [{ isOver, canDrop }, drop] = useDrop({
     accept: ['STAFF', 'ASSIGNMENT'],
+    canDrop: () => canEdit,
     drop: (item) => {
       if (item.staffId) {
         // Dropping a staff member from sidebar
@@ -95,8 +96,10 @@ function ScheduleCell({ day, task, staff, assignments, onTaskDrop, onRemoveAssig
 
   // Combine drag and drop refs
   const attachRef = (el) => {
-    drag(el);
-    drop(el);
+    if (canEdit) {
+      drag(el);
+      drop(el);
+    }
   };
 
   return (
@@ -104,10 +107,10 @@ function ScheduleCell({ day, task, staff, assignments, onTaskDrop, onRemoveAssig
       ref={attachRef}
       className={`schedule-cell ${isOver && canDrop ? 'drag-over' : ''} ${assignment ? 'has-assignment' : ''} ${isDragging ? 'dragging' : ''} ${isEditing ? 'editing' : ''}`}
       style={{ borderColor: task.color }}
-      onClick={() => !assignment && !isEditing && onStartEdit(day, task.name)}
-      title={!assignment ? "Click to assign staff" : ""}
+      onClick={() => canEdit && !assignment && !isEditing && onStartEdit(day, task.name)}
+      title={canEdit && !assignment ? "Click to assign staff" : ""}
     >
-      {isEditing ? (
+      {canEdit && isEditing ? (
         <div className="staff-selector">
           <select
             className="staff-select"
@@ -138,23 +141,26 @@ function ScheduleCell({ day, task, staff, assignments, onTaskDrop, onRemoveAssig
       ) : assignment ? (
         <div className="assignment" style={{ color: assignment.staff.color }}>
           <span>{assignment.staff.name}</span>
-          <button
-            className="remove-btn"
-            onClick={() => onRemoveAssignment(assignment.id)}
-            title="Remove assignment"
-          >
-            ×
-          </button>
+          {canEdit && (
+            <button
+              className="remove-btn"
+              onClick={() => onRemoveAssignment(assignment.id)}
+              title="Remove assignment"
+            >
+              ×
+            </button>
+          )}
         </div>
       ) : null}
     </td>
   );
 }
 
-function TaskRow({ task, index, visibleDays, staff, assignments, onTaskDrop, onRemoveAssignment, onMoveAssignment, onEditTask, onDeleteTask, onReorderTask, editingCell, onStartCellEdit, onCancelCellEdit, onCellSelectStaff }) {
+function TaskRow({ task, index, visibleDays, staff, assignments, onTaskDrop, onRemoveAssignment, onMoveAssignment, onEditTask, onDeleteTask, onReorderTask, editingCell, onStartCellEdit, onCancelCellEdit, onCellSelectStaff, canEdit = true }) {
   const [{ isDragging }, drag] = useDrag({
     type: 'TASK_REORDER',
     item: { taskId: task.id, index },
+    canDrag: () => canEdit,
     collect: (monitor) => ({
       isDragging: monitor.isDragging()
     })
@@ -162,6 +168,7 @@ function TaskRow({ task, index, visibleDays, staff, assignments, onTaskDrop, onR
 
   const [{ isOver }, drop] = useDrop({
     accept: 'TASK_REORDER',
+    canDrop: () => canEdit,
     hover: (item) => {
       if (item.index !== index) {
         onReorderTask(item.index, index);
@@ -174,39 +181,43 @@ function TaskRow({ task, index, visibleDays, staff, assignments, onTaskDrop, onR
   });
 
   const attachRef = (el) => {
-    drag(el);
-    drop(el);
+    if (canEdit) {
+      drag(el);
+      drop(el);
+    }
   };
 
   return (
     <tr ref={attachRef} className={`${isDragging ? 'dragging-row' : ''} ${isOver ? 'drag-over-row' : ''}`}>
       <td className="task-name-cell">
-        <span className="drag-hint">⇄</span>
+        {canEdit && <span className="drag-hint">⇄</span>}
         <span className="task-icon">{task.icon}</span>
         <span className="task-name-text">{task.name}</span>
-        <div className="task-actions">
-          <button
-            className="edit-btn-small"
-            onClick={() => onEditTask(task)}
-            title="Edit task"
-          >
-            ✏️
-          </button>
-          <button
-            className="delete-btn-small"
-            onClick={() => onDeleteTask(task.id)}
-            title="Delete task"
-          >
-            🗑️
-          </button>
-        </div>
+        {canEdit && (
+          <div className="task-actions">
+            <button
+              className="edit-btn-small"
+              onClick={() => onEditTask(task)}
+              title="Edit task"
+            >
+              ✏️
+            </button>
+            <button
+              className="delete-btn-small"
+              onClick={() => onDeleteTask(task.id)}
+              title="Delete task"
+            >
+              🗑️
+            </button>
+          </div>
+        )}
       </td>
       {visibleDays.map((day, dayIndex) => {
-        const cellKey = `${dayIndex}-${task.name}`;
+        const cellKey = `${day}-${task.name}`;
         return (
           <ScheduleCell
             key={`${task.id}-${dayIndex}`}
-            day={dayIndex}
+            day={day}
             task={task}
             staff={staff}
             assignments={assignments}
@@ -217,6 +228,7 @@ function TaskRow({ task, index, visibleDays, staff, assignments, onTaskDrop, onR
             onStartEdit={onStartCellEdit}
             onCancelEdit={onCancelCellEdit}
             onSelectStaff={onCellSelectStaff}
+            canEdit={canEdit}
           />
         );
       })}
@@ -230,6 +242,7 @@ function WeeklySchedule({
   assignments,
   weekStartDate,
   showDays,
+  loadingWeek,
   onNavigateWeek,
   onShowDaysChange,
   onTaskDrop,
@@ -243,7 +256,9 @@ function WeeklySchedule({
   onAddTask,
   onUpdateTask,
   onDeleteTask,
-  onReorderTasks
+  onReorderTasks,
+  onShowPrintView,
+  canEdit = true
 }) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
@@ -339,7 +354,42 @@ function WeeklySchedule({
   };
 
   return (
-    <div className="weekly-schedule">
+    <div className="weekly-schedule" style={{ position: 'relative' }}>
+      {loadingWeek && (
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(255, 255, 255, 0.8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          borderRadius: '8px'
+        }}>
+          <div style={{
+            padding: '20px',
+            backgroundColor: 'white',
+            borderRadius: '8px',
+            boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px'
+          }}>
+            <div style={{
+              width: '24px',
+              height: '24px',
+              border: '3px solid #f3f3f3',
+              borderTop: '3px solid #3498db',
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite'
+            }}></div>
+            <span style={{ fontSize: '16px', color: '#333' }}>Loading week...</span>
+          </div>
+        </div>
+      )}
       <div className="schedule-controls">
         <div className="controls-group">
           <label>Week:</label>
@@ -379,6 +429,12 @@ function WeeklySchedule({
             </button>
           </div>
         </div>
+
+        <div className="controls-group" style={{ marginLeft: 'auto' }}>
+          <button className="btn-print-schedule" onClick={onShowPrintView}>
+            🖨️ Print Schedule
+          </button>
+        </div>
       </div>
 
       <table className="schedule-table">
@@ -387,19 +443,21 @@ function WeeklySchedule({
             <th className="task-header">
               <div className="task-header-content">
                 <span>Task/Day</span>
-                <button
-                  className="add-task-btn"
-                  onClick={() => {
-                    if (showAddForm && !editingTask) {
-                      handleCancelEdit();
-                    } else {
-                      setShowAddForm(!showAddForm);
-                    }
-                  }}
-                  title="Add new task"
-                >
-                  {showAddForm ? '✕' : '+ Add Task'}
-                </button>
+                {canEdit && (
+                  <button
+                    className="add-task-btn"
+                    onClick={() => {
+                      if (showAddForm && !editingTask) {
+                        handleCancelEdit();
+                      } else {
+                        setShowAddForm(!showAddForm);
+                      }
+                    }}
+                    title="Add new task"
+                  >
+                    {showAddForm ? '✕' : '+ Add Task'}
+                  </button>
+                )}
               </div>
             </th>
             {visibleDays.map((day, index) => (
@@ -410,7 +468,7 @@ function WeeklySchedule({
           </tr>
         </thead>
         <tbody>
-          {showAddForm && (
+          {canEdit && showAddForm && (
             <tr className="add-task-row">
               <td colSpan={showDays + 1}>
                 <form className="inline-task-form" onSubmit={handleSubmitTask}>
@@ -507,6 +565,7 @@ function WeeklySchedule({
               onStartCellEdit={handleStartCellEdit}
               onCancelCellEdit={handleCancelCellEdit}
               onCellSelectStaff={handleCellSelectStaff}
+              canEdit={canEdit}
             />
           ))}
         </tbody>

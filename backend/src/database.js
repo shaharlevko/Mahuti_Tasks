@@ -7,6 +7,21 @@ const db = new sqlite3.Database(dbPath);
 // Initialize database schema
 const initDatabase = () => {
   db.serialize(() => {
+    // Users table for authentication
+    db.run(`
+      CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        email TEXT NOT NULL UNIQUE,
+        password_hash TEXT,
+        google_id TEXT UNIQUE,
+        name TEXT NOT NULL,
+        role TEXT NOT NULL DEFAULT 'staff',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        CHECK (role IN ('admin', 'manager', 'staff'))
+      )
+    `);
+
     // Staff table with unique name constraint
     db.run(`
       CREATE TABLE IF NOT EXISTS staff (
@@ -78,6 +93,9 @@ const initDatabase = () => {
 };
 
 const cleanupAndInsertSampleData = () => {
+  // Always ensure admin user exists
+  ensureAdminUser();
+
   // Check if staff table is empty
   db.get('SELECT COUNT(*) as count FROM staff', [], (err, row) => {
     if (err) {
@@ -95,7 +113,38 @@ const cleanupAndInsertSampleData = () => {
   });
 };
 
+const ensureAdminUser = () => {
+  const bcrypt = require('bcryptjs');
+  const defaultPassword = bcrypt.hashSync('admin123', 10);
+
+  db.run(`INSERT OR IGNORE INTO users (email, password_hash, name, role) VALUES (?, ?, ?, ?)`,
+    ['admin@mahuti.com', defaultPassword, 'Admin User', 'admin'],
+    (err) => {
+      if (err) {
+        console.error('Error creating default admin:', err);
+      } else {
+        console.log('Default admin user ensured: admin@mahuti.com / admin123');
+      }
+    }
+  );
+};
+
 const insertSampleData = () => {
+  // Create default admin user (password: admin123)
+  const bcrypt = require('bcryptjs');
+  const defaultPassword = bcrypt.hashSync('admin123', 10);
+
+  db.run(`INSERT OR IGNORE INTO users (email, password_hash, name, role) VALUES (?, ?, ?, ?)`,
+    ['admin@mahuti.com', defaultPassword, 'Admin User', 'admin'],
+    (err) => {
+      if (err) {
+        console.error('Error creating default admin:', err);
+      } else {
+        console.log('Default admin created: admin@mahuti.com / admin123');
+      }
+    }
+  );
+
   // Sample staff from the reference image with saturated colors for print visibility
   const staff = [
     { name: 'Rocio', color: '#FF6B58' },  // Saturated coral

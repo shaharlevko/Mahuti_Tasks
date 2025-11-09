@@ -1,0 +1,340 @@
+.user-manager {
+  min-height: 100vh;
+  background-color: #FFF9F0;
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+}
+
+.user-manager-header {
+  background-color: white;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.user-manager-header .header-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.user-manager-header .header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-manager-header h1 {
+  margin: 0;
+  color: #FF6B9D;
+  font-size: 28px;
+}
+
+.user-manager-header .flower-icon {
+  font-size: 24px;
+}
+
+.btn-back {
+  padding: 10px 20px;
+  background-color: #B4D7E8;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+}
+
+.btn-back:hover {
+  background-color: #A8D8EA;
+}
+
+.user-manager-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 30px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.users-section,
+.invite-section,
+.pending-invites-section {
+  background: white;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.users-section h2,
+.invite-section h2,
+.pending-invites-section h2 {
+  color: #FF6B9D;
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 22px;
+}
+
+.table-container {
+  overflow-x: auto;
+}
+
+.users-table,
+.invites-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.users-table th,
+.users-table td,
+.invites-table th,
+.invites-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #F0F0F0;
+}
+
+.users-table th,
+.invites-table th {
+  background-color: #FFF4E6;
+  font-weight: bold;
+  color: #333;
+}
+
+.users-table tbody tr:hover,
+.invites-table tbody tr:hover {
+  background-color: #FFFBF0;
+}
+
+.role-select {
+  padding: 6px 10px;
+  border: 2px solid #FFB5A7;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 14px;
+  background-color: white;
+  cursor: pointer;
+}
+
+.role-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.role-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.role-badge.role-admin {
+  background-color: #FFB5A7;
+  color: #8B0000;
+}
+
+.role-badge.role-manager {
+  background-color: #B4D7E8;
+  color: #00438C;
+}
+
+.role-badge.role-staff {
+  background-color: #C7ECDE;
+  color: #006644;
+}
+
+.btn-delete {
+  padding: 6px 12px;
+  background-color: #FFB5A7;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  color: #8B0000;
+  font-weight: bold;
+}
+
+.btn-delete:hover:not(:disabled) {
+  background-color: #FF9999;
+}
+
+.btn-delete:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.invite-form {
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 15px;
+  align-items: flex-end;
+  flex-wrap: nowrap !important;
+  width: 100%;
+}
+
+.invite-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.invite-form .form-group:nth-child(1) {
+  flex: 1 1 auto;
+  min-width: 200px;
+}
+
+.invite-form .form-group:nth-child(2) {
+  flex: 0 0 auto;
+  width: 150px;
+}
+
+.invite-form .form-group:nth-child(3) {
+  flex: 0 0 auto;
+}
+
+.invite-form label {
+  font-weight: bold;
+  color: #333;
+  font-size: 14px;
+}
+
+.invite-form input,
+.invite-form select {
+  padding: 10px;
+  border: 2px solid #FFB5A7;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  background-color: white;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.invite-form input:focus,
+.invite-form select:focus {
+  outline: none;
+  border-color: #FF6B9D;
+}
+
+.btn-send-invite {
+  padding: 10px 20px;
+  background-color: #C7ECDE;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: bold;
+  color: #006644;
+  white-space: nowrap;
+}
+
+.btn-send-invite:hover:not(:disabled) {
+  background-color: #B0E0CF;
+}
+
+.btn-send-invite:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-resend,
+.btn-revoke {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.btn-resend {
+  background-color: #B4D7E8;
+  color: #00438C;
+}
+
+.btn-resend:hover {
+  background-color: #A8D8EA;
+}
+
+.btn-revoke {
+  background-color: #FFCBA4;
+  color: #8B4513;
+}
+
+.btn-revoke:hover {
+  background-color: #FFB999;
+}
+
+/* Responsive Design for Mobile */
+@media (max-width: 768px) {
+  .user-manager-header .header-content {
+    flex-direction: column;
+    gap: 15px;
+    align-items: stretch;
+  }
+
+  .btn-back {
+    width: 100%;
+  }
+
+  .table-container {
+    overflow-x: auto;
+  }
+
+  .users-table,
+  .invites-table {
+    min-width: 600px;
+  }
+
+  /* Stack invite form vertically on mobile */
+  .invite-form {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .invite-form .form-group:nth-child(1),
+  .invite-form .form-group:nth-child(2),
+  .invite-form .form-group:nth-child(3) {
+    flex: 1 1 auto;
+    width: 100%;
+    max-width: none;
+  }
+
+  .btn-send-invite {
+    width: 100%;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .btn-resend,
+  .btn-revoke {
+    width: 100%;
+  }
+}
+
+/* Tablet adjustments */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .invite-form .form-group:nth-child(1) {
+    flex: 1 1 auto;
+  }
+
+  .invite-form .form-group:nth-child(2) {
+    flex: 0 0 auto;
+    width: 180px;
+  }
+}

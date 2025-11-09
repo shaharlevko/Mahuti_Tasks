@@ -29,6 +29,29 @@
   font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', cursive, sans-serif;
 }
 
+.btn-print-schedule {
+  background: linear-gradient(135deg, #C7ECDE 0%, #B4E7CE 100%);
+  color: #2D5F4B;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 0.95em;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: bold;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-print-schedule:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.18);
+}
+
+.btn-print-schedule:active {
+  transform: translateY(0);
+}
+
 .week-navigation {
   display: flex;
   align-items: center;
@@ -633,5 +656,14 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
   }
 }

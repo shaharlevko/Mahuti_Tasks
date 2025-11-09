@@ -2,7 +2,11 @@ import { useState, useEffect } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { TouchBackend } from 'react-dnd-touch-backend';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useAuth } from './contexts/AuthContext';
+import Login from './components/Login';
+import Register from './components/Register';
 import WeeklySchedule from './components/WeeklySchedule';
 import TaskLibrary from './components/TaskLibrary';
 import PrintView from './components/PrintView';
@@ -12,13 +16,32 @@ import './App.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
-function App() {
+// Helper functions to convert between day names and integers (for Supabase)
+const DAYS_MAP = {
+  'Sunday': 0,
+  'Monday': 1,
+  'Tuesday': 2,
+  'Wednesday': 3,
+  'Thursday': 4,
+  'Friday': 5,
+  'Saturday': 6
+};
+
+const DAYS_ARRAY = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+const getDayNumber = (dayName) => DAYS_MAP[dayName];
+const getDayName = (dayNumber) => DAYS_ARRAY[dayNumber];
+
+function MainApp() {
+  const { user, logout, canEdit, isAdmin, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const [staff, setStaff] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [currentSchedule, setCurrentSchedule] = useState(null);
   const [assignments, setAssignments] = useState({});
   const [showPrintView, setShowPrintView] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadingWeek, setLoadingWeek] = useState(false);
   const [showDays, setShowDays] = useState(5);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
@@ -28,6 +51,9 @@ function App() {
 
   // Mobile detection state
   const [isMobile, setIsMobile] = useState(false);
+
+  // Track deleted assignment keys to prevent race conditions
+  const [deletedKeys, setDeletedKeys] = useState(new Set());
 
   // Calculate the current week's Sunday
   const getCurrentSunday = () => {
@@ -41,6 +67,7 @@ function App() {
   const [weekStartDate, setWeekStartDate] = useState(getCurrentSunday());
 
   const navigateWeek = (direction) => {
+    setLoadingWeek(true);
     const currentDate = new Date(weekStartDate);
     currentDate.setDate(currentDate.getDate() + (direction * 7));
     setWeekStartDate(currentDate.toISOString().split('T')[0]);
@@ -131,9 +158,11 @@ function App() {
       const assignmentsMap = {};
       if (schedule.assignments && schedule.assignments.length > 0) {
         schedule.assignments.forEach(assignment => {
-          const key = `${assignment.day_of_week}-${assignment.time_slot}`;
+          const dayName = getDayName(assignment.day_of_week);
+          const key = `${dayName}-${assignment.time_slot}`;
           assignmentsMap[key] = {
             ...assignment,
+            day_of_week: dayName, // Convert to day name for frontend consistency
             task: {
               id: assignment.task_id,
               name: assignment.task_name,
@@ -152,57 +181,160 @@ function App() {
       // Initialize history with loaded state
       setHistory([JSON.parse(JSON.stringify(assignmentsMap))]);
       setCurrentHistoryIndex(0);
+      // Clear deleted keys when loading new schedule
+      setDeletedKeys(new Set());
+      setLoadingWeek(false);
     } catch (error) {
       console.error('Error loading schedule:', error);
+      setLoadingWeek(false);
     }
   };
 
   const handleTaskDrop = async (taskId, day, staffId) => {
-    if (!currentSchedule) return;
+    if (!currentSchedule) {
+      alert('Schedule not loaded. Please refresh the page.');
+      return;
+    }
 
+    const task = tasks.find(t => t.id === taskId);
+    const staffMember = staff.find(s => s.id === staffId);
+
+    // Validation
+    if (!task) {
+      console.error('Task not found:', taskId);
+      alert('Task not found. Please try again.');
+      return;
+    }
+    if (!staffMember) {
+      console.error('Staff member not found:', staffId);
+      alert('Staff member not found. Please try again.');
+      return;
+    }
+    if (!currentSchedule.id) {
+      console.error('Schedule ID is missing:', currentSchedule);
+      alert('Schedule ID is missing. Please refresh the page.');
+      return;
+    }
+
+    const key = `${day}-${task.name}`;
+
+    // Optimistic update - update UI immediately
+    const tempId = `temp-${Date.now()}`;
+    const optimisticAssignment = {
+      id: tempId,
+      schedule_id: currentSchedule.id,
+      task_id: taskId,
+      staff_id: staffId,
+      day_of_week: day,
+      time_slot: task.name,
+      task,
+      staff: staffMember
+    };
+
+    const newAssignments = {
+      ...assignments,
+      [key]: optimisticAssignment
+    };
+    saveToHistory(newAssignments);
+    setAssignments(newAssignments);
+
+    // Debug log
+    console.log('Creating assignment with:', {
+      schedule_id: currentSchedule.id,
+      task_id: taskId,
+      staff_id: staffId,
+      day_of_week: getDayNumber(day),
+      day_name: day,
+      time_slot: task.name
+    });
+
+    // Sync with server in background
     try {
-      const task = tasks.find(t => t.id === taskId);
-      const staffMember = staff.find(s => s.id === staffId);
-
       const response = await axios.post(`${API_URL}/assignments`, {
         schedule_id: currentSchedule.id,
         task_id: taskId,
         staff_id: staffId,
-        day_of_week: day,
+        day_of_week: getDayNumber(day),
         time_slot: task.name
       });
 
-      // Update local state
-      const key = `${day}-${task.name}`;
-      const newAssignments = {
-        ...assignments,
-        [key]: { ...response.data, task, staff: staffMember }
-      };
-      saveToHistory(newAssignments);
-      setAssignments(newAssignments);
+      // Update with real ID from server (only if not deleted in the meantime)
+      setAssignments(prev => {
+        // Check if this assignment was deleted while the request was in flight
+        if (deletedKeys.has(key)) {
+          // Remove from deletedKeys set and don't add the assignment
+          setDeletedKeys(prevDeleted => {
+            const newDeleted = new Set(prevDeleted);
+            newDeleted.delete(key);
+            return newDeleted;
+          });
+          return prev;
+        }
+        return {
+          ...prev,
+          [key]: { ...response.data, day_of_week: day, task, staff: staffMember }
+        };
+      });
     } catch (error) {
+      // Rollback on error
+      const rolledBack = { ...assignments };
+      delete rolledBack[key];
+      setAssignments(rolledBack);
+
       if (error.response?.status === 409) {
         alert('Conflict: Staff member already assigned at this time!');
+      } else if (error.response?.status === 401) {
+        alert('Authentication error. Please log in again.');
+        console.error('Auth error:', error.response?.data);
+      } else if (error.response?.status === 403) {
+        alert('Access denied. You need admin or manager role to make changes.');
+        console.error('Permission error:', error.response?.data);
       } else {
         console.error('Error creating assignment:', error);
+        console.error('Error response:', error.response?.data);
+        console.error('Error status:', error.response?.status);
+        alert(`Failed to assign staff: ${error.response?.data?.error || error.message}`);
       }
     }
   };
 
   const handleRemoveAssignment = async (assignmentId) => {
+    // Find the key for this assignment
+    let assignmentKey = null;
+    Object.keys(assignments).forEach(key => {
+      if (assignments[key].id === assignmentId) {
+        assignmentKey = key;
+      }
+    });
+
+    // Optimistic update - remove immediately
+    const previousAssignments = { ...assignments };
+    const newAssignments = { ...assignments };
+    Object.keys(newAssignments).forEach(key => {
+      if (newAssignments[key].id === assignmentId) {
+        delete newAssignments[key];
+      }
+    });
+    saveToHistory(newAssignments);
+    setAssignments(newAssignments);
+
+    // Skip backend sync if this is a temporary ID (optimistic update not yet confirmed)
+    if (String(assignmentId).startsWith('temp-')) {
+      // Mark this key as deleted to prevent the POST response from re-adding it
+      if (assignmentKey) {
+        setDeletedKeys(prev => new Set(prev).add(assignmentKey));
+      }
+      return;
+    }
+
+    // Sync with server in background
     try {
       await axios.delete(`${API_URL}/assignments/${assignmentId}`);
-      // Remove from local state
-      const newAssignments = { ...assignments };
-      Object.keys(newAssignments).forEach(key => {
-        if (newAssignments[key].id === assignmentId) {
-          delete newAssignments[key];
-        }
-      });
-      saveToHistory(newAssignments);
-      setAssignments(newAssignments);
     } catch (error) {
+      // Rollback on error
+      setAssignments(previousAssignments);
       console.error('Error removing assignment:', error);
+      alert('Failed to remove assignment. Please try again.');
     }
   };
 
@@ -223,14 +355,14 @@ function App() {
           axios.put(`${API_URL}/assignments/${fromAssignment.id}`, {
             task_id: toAssignment.task_id,
             staff_id: fromAssignment.staff_id,
-            day_of_week: toDay,
+            day_of_week: getDayNumber(toDay),
             time_slot: toTaskName,
             notes: fromAssignment.notes
           }),
           axios.put(`${API_URL}/assignments/${toAssignment.id}`, {
             task_id: fromAssignment.task_id,
             staff_id: toAssignment.staff_id,
-            day_of_week: fromAssignment.day_of_week,
+            day_of_week: getDayNumber(fromAssignment.day_of_week),
             time_slot: fromAssignment.time_slot,
             notes: toAssignment.notes
           })
@@ -260,7 +392,7 @@ function App() {
         await axios.put(`${API_URL}/assignments/${fromAssignment.id}`, {
           task_id: task.id,
           staff_id: fromAssignment.staff_id,
-          day_of_week: toDay,
+          day_of_week: getDayNumber(toDay),
           time_slot: toTaskName,
           notes: fromAssignment.notes
         });
@@ -486,8 +618,16 @@ function App() {
               <span className="flower-icon">🌻</span>
             </div>
             <div className="header-actions">
-              <button className="btn-print" onClick={() => setShowPrintView(true)}>
-                🖨️ Print Schedule
+              <span className="user-info">
+                👤 {user.name} ({user.role})
+              </span>
+              {isAdmin() && (
+                <button className="btn-manage-users" onClick={() => navigate('/admin/users')}>
+                  👥 Manage Users
+                </button>
+              )}
+              <button className="btn-logout" onClick={logout}>
+                🚪 Logout
               </button>
             </div>
           </div>
@@ -496,9 +636,10 @@ function App() {
         <div className="app-content">
           <TaskLibrary
             staff={staff}
-            onAddStaff={handleAddStaff}
-            onUpdateStaff={handleUpdateStaff}
-            onDeleteStaff={handleDeleteStaff}
+            onAddStaff={canEdit() ? handleAddStaff : null}
+            onUpdateStaff={canEdit() ? handleUpdateStaff : null}
+            onDeleteStaff={canEdit() ? handleDeleteStaff : null}
+            canEdit={canEdit()}
           />
           <WeeklySchedule
             tasks={tasks}
@@ -506,20 +647,23 @@ function App() {
             assignments={assignments}
             weekStartDate={weekStartDate}
             showDays={showDays}
+            loadingWeek={loadingWeek}
             onNavigateWeek={navigateWeek}
             onShowDaysChange={setShowDays}
-            onTaskDrop={handleTaskDrop}
-            onRemoveAssignment={handleRemoveAssignment}
-            onMoveAssignment={handleMoveAssignment}
-            onClearWeek={handleClearWeek}
-            onUndo={handleUndo}
-            onRedo={handleRedo}
-            canUndo={canUndo}
-            canRedo={canRedo}
-            onAddTask={handleAddTask}
-            onUpdateTask={handleUpdateTask}
-            onDeleteTask={handleDeleteTask}
-            onReorderTasks={handleReorderTasks}
+            onTaskDrop={canEdit() ? handleTaskDrop : null}
+            onRemoveAssignment={canEdit() ? handleRemoveAssignment : null}
+            onMoveAssignment={canEdit() ? handleMoveAssignment : null}
+            onClearWeek={canEdit() ? handleClearWeek : null}
+            onUndo={canEdit() ? handleUndo : null}
+            onRedo={canEdit() ? handleRedo : null}
+            canUndo={canEdit() && canUndo}
+            canRedo={canEdit() && canRedo}
+            onAddTask={canEdit() ? handleAddTask : null}
+            onUpdateTask={canEdit() ? handleUpdateTask : null}
+            onDeleteTask={canEdit() ? handleDeleteTask : null}
+            onReorderTasks={canEdit() ? handleReorderTasks : null}
+            canEdit={canEdit()}
+            onShowPrintView={() => setShowPrintView(true)}
           />
         </div>
       </div>
@@ -532,6 +676,29 @@ function App() {
       />
     </DndProvider>
   );
+}
+
+function App() {
+  return <AppContent />;
+}
+
+function AppContent() {
+  const { user, loading } = useAuth();
+  const [showRegister, setShowRegister] = useState(false);
+
+  if (loading) {
+    return <div className="loading">Loading Mahuti Tasks...</div>;
+  }
+
+  if (!user) {
+    return showRegister ? (
+      <Register onSwitchToLogin={() => setShowRegister(false)} />
+    ) : (
+      <Login onSwitchToRegister={() => setShowRegister(true)} />
+    );
+  }
+
+  return <MainApp />;
 }
 
 export default App;
