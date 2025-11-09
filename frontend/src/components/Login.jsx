@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import './Login.css';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const SHOW_DEMO = import.meta.env.VITE_SHOW_DEMO !== 'false'; // Show demo by default, hide if explicitly set to 'false'
+
 function Login({ onSwitchToRegister }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -24,7 +27,7 @@ function Login({ onSwitchToRegister }) {
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = 'http://localhost:3001/api/auth/google';
+    window.location.href = `${API_URL}/auth/google`;
   };
 
   const handleDemoLogin = async () => {
@@ -113,9 +116,11 @@ function Login({ onSwitchToRegister }) {
           Continue with Google
         </button>
 
-        <button onClick={handleDemoLogin} className="btn-demo" disabled={loading}>
-          🔓 Try Demo (admin@mahuti.com)
-        </button>
+        {SHOW_DEMO && (
+          <button onClick={handleDemoLogin} className="btn-demo" disabled={loading}>
+            🔓 Try Demo (admin@mahuti.com)
+          </button>
+        )}
 
         <p className="switch-auth">
           Don't have an account?{' '}
