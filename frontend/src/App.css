@@ -90,3 +90,38 @@ body {
   padding: 50px;
   color: #FFB5A7;
 }
+
+/* Responsive styles for tablets */
+@media (max-width: 1024px) {
+  .app {
+    padding: 15px;
+  }
+
+  .header-left h1 {
+    font-size: 2em;
+  }
+
+  .app-content {
+    gap: 15px;
+  }
+}
+
+/* Hide desktop view on mobile */
+@media (max-width: 768px) {
+  .app-header {
+    padding: 15px;
+  }
+
+  .header-left h1 {
+    font-size: 1.5em;
+  }
+
+  .flower-icon {
+    font-size: 2em;
+  }
+
+  .btn-print {
+    padding: 12px 20px;
+    font-size: 1em;
+  }
+}
