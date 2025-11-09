@@ -71,9 +71,24 @@ In Vercel Dashboard (https://vercel.com/dashboard):
 1. Go to your project
 2. Click "Settings" → "Environment Variables"
 3. Add the following:
+
+   **For Production:**
    - **Key**: `VITE_API_URL`
    - **Value**: Your backend API URL (e.g., `https://your-backend.herokuapp.com/api`)
-   - **Environment**: Production, Preview, and Development
+   - **Environment**: Production
+
+   - **Key**: `VITE_SHOW_DEMO`
+   - **Value**: `false` (hides demo button in production)
+   - **Environment**: Production
+
+   **For Preview/Development:**
+   - **Key**: `VITE_API_URL`
+   - **Value**: Your staging backend URL or `http://localhost:3001/api`
+   - **Environment**: Preview, Development
+
+   - **Key**: `VITE_SHOW_DEMO`
+   - **Value**: `true` (shows demo button for testing)
+   - **Environment**: Preview, Development
 
 4. Redeploy if needed (or Vercel will auto-deploy on next push)
 
@@ -150,7 +165,11 @@ services:
 
 ### Frontend (.env in /frontend)
 ```
+# Backend API URL (required)
 VITE_API_URL=https://your-backend-url/api
+
+# Show demo button (optional, defaults to true)
+VITE_SHOW_DEMO=false
 ```
 
 ### Backend (.env in /backend)
@@ -184,6 +203,70 @@ app.use(cors({
 - Ensure `package.json` in frontend has all dependencies
 - Check Vercel build logs for specific errors
 - Verify Node version compatibility (Vercel uses Node 18 by default)
+
+---
+
+## Managing Multiple Environments
+
+### Production vs Testing/Staging
+
+Vercel makes it easy to maintain separate environments:
+
+**1. Production Environment** (your main public site)
+- Automatically deploys from your `main` branch
+- Set `VITE_SHOW_DEMO=false` to hide demo button
+- Use production backend URL
+
+**2. Preview/Staging Environment** (for testing)
+- Automatically created for every PR or branch
+- Set `VITE_SHOW_DEMO=true` to show demo button
+- Can use staging backend URL
+
+### How to Set Up:
+
+#### Option 1: Single Deployment with Environment-Specific Variables
+
+In Vercel Dashboard:
+1. Go to Settings → Environment Variables
+2. Add variables with different values per environment:
+   - Production: `VITE_SHOW_DEMO=false`
+   - Preview: `VITE_SHOW_DEMO=true`
+   - Development: `VITE_SHOW_DEMO=true`
+
+#### Option 2: Separate Projects (Recommended for Strict Separation)
+
+Create two separate Vercel projects:
+
+**Production Project:**
+```
+Name: mahuti-tasks-production
+Branch: main
+Environment Variables:
+  VITE_API_URL=https://api.mahuti.com/api
+  VITE_SHOW_DEMO=false
+```
+
+**Staging Project:**
+```
+Name: mahuti-tasks-staging
+Branch: develop
+Environment Variables:
+  VITE_API_URL=https://api-staging.mahuti.com/api
+  VITE_SHOW_DEMO=true
+```
+
+### Branch Strategy:
+
+```
+main (production)
+  ↓
+develop (staging)
+  ↓
+feature branches (preview)
+```
+
+- Merge features to `develop` → auto-deploy to staging
+- Merge `develop` to `main` → auto-deploy to production
 
 ---
 
