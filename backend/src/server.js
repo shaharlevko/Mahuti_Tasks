@@ -10,9 +10,22 @@ const invitationsRoutes = require('./routes/invitations');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-app.use(cors());
+// CORS configuration - allow frontend URL from environment
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+app.use(cors({
+  origin: [FRONTEND_URL, 'http://localhost:5173', 'http://localhost:3000'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(bodyParser.json());
 app.use(passport.initialize());
+
+// Health check endpoint for Render
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'ok', message: 'Mahuti Tasks API is running' });
+});
 
 // Authentication routes (public)
 app.use('/api/auth', authRoutes);
