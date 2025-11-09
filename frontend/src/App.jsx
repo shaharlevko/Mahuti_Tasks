@@ -3,7 +3,7 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { TouchBackend } from 'react-dnd-touch-backend';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { supabase } from './lib/supabase';
 import { useAuth } from './contexts/AuthContext';
 import Login from './components/Login';
 import Register from './components/Register';
@@ -13,8 +13,6 @@ import PrintView from './components/PrintView';
 import ConfirmDialog from './components/ConfirmDialog';
 import MobileScheduleView from './components/MobileScheduleView';
 import './App.css';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 // Helper functions to convert between day names and integers (for Supabase)
 const DAYS_MAP = {
@@ -75,11 +73,8 @@ function MainApp() {
 
   // Undo/Redo functions
   const saveToHistory = (newAssignments) => {
-    // Remove any history after current index (when making new changes after undo)
     const newHistory = history.slice(0, currentHistoryIndex + 1);
-    // Add current state to history
     newHistory.push(JSON.parse(JSON.stringify(newAssignments)));
-    // Limit history to 50 items
     if (newHistory.length > 50) {
       newHistory.shift();
     } else {
@@ -132,14 +127,17 @@ function MainApp() {
 
   const loadInitialData = async () => {
     try {
-      const [staffRes, tasksRes] = await Promise.all([
-        axios.get(`${API_URL}/staff`),
-        axios.get(`${API_URL}/tasks`)
+      const [staffResult, tasksResult] = await Promise.all([
+        supabase.from('staff').select('*, users:user_id(id, email, name, role)').order('name'),
+        supabase.from('tasks').select('*').order('task_order')
       ]);
-      setStaff(staffRes.data);
-      setTasks(tasksRes.data);
 
-      // Load or create schedule for current week
+      if (staffResult.error) throw staffResult.error;
+      if (tasksResult.error) throw tasksResult.error;
+
+      setStaff(staffResult.data);
+      setTasks(tasksResult.data);
+
       await loadScheduleForWeek(weekStartDate);
       setLoading(false);
     } catch (error) {
@@ -150,38 +148,64 @@ function MainApp() {
 
   const loadScheduleForWeek = async (weekStart) => {
     try {
-      const scheduleRes = await axios.get(`${API_URL}/schedules/by-week/${weekStart}`);
-      const schedule = scheduleRes.data;
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekEnd.getDate() + 6);
+      const weekEndStr = weekEnd.toISOString().split('T')[0];
+
+      // Find or create schedule for this week
+      let { data: schedule, error: scheduleError } = await supabase
+        .from('schedules')
+        .select('*')
+        .eq('week_start', weekStart)
+        .maybeSingle();
+
+      if (scheduleError && scheduleError.code !== 'PGRST116') {
+        throw scheduleError;
+      }
+
+      if (!schedule) {
+        // Create new schedule for this week
+        const { data: newSchedule, error: createError } = await supabase
+          .from('schedules')
+          .insert([{ week_start: weekStart, week_end: weekEndStr }])
+          .select()
+          .single();
+
+        if (createError) throw createError;
+        schedule = newSchedule;
+      }
+
       setCurrentSchedule(schedule);
 
-      // Load assignments from schedule
+      // Load assignments for this schedule with staff and task details
+      const { data: assignmentsData, error: assignmentsError } = await supabase
+        .from('schedule_assignments')
+        .select(`
+          *,
+          staff:staff_id(*),
+          tasks:task_id(*)
+        `)
+        .eq('schedule_id', schedule.id);
+
+      if (assignmentsError) throw assignmentsError;
+
       const assignmentsMap = {};
-      if (schedule.assignments && schedule.assignments.length > 0) {
-        schedule.assignments.forEach(assignment => {
+      if (assignmentsData && assignmentsData.length > 0) {
+        assignmentsData.forEach(assignment => {
           const dayName = getDayName(assignment.day_of_week);
           const key = `${dayName}-${assignment.time_slot}`;
           assignmentsMap[key] = {
             ...assignment,
-            day_of_week: dayName, // Convert to day name for frontend consistency
-            task: {
-              id: assignment.task_id,
-              name: assignment.task_name,
-              icon: assignment.task_icon,
-              color: assignment.task_color
-            },
-            staff: {
-              id: assignment.staff_id,
-              name: assignment.staff_name,
-              color: assignment.staff_color
-            }
+            day_of_week: dayName,
+            task: assignment.tasks,
+            staff: assignment.staff
           };
         });
       }
+
       setAssignments(assignmentsMap);
-      // Initialize history with loaded state
       setHistory([JSON.parse(JSON.stringify(assignmentsMap))]);
       setCurrentHistoryIndex(0);
-      // Clear deleted keys when loading new schedule
       setDeletedKeys(new Set());
       setLoadingWeek(false);
     } catch (error) {
@@ -199,26 +223,14 @@ function MainApp() {
     const task = tasks.find(t => t.id === taskId);
     const staffMember = staff.find(s => s.id === staffId);
 
-    // Validation
-    if (!task) {
-      console.error('Task not found:', taskId);
-      alert('Task not found. Please try again.');
-      return;
-    }
-    if (!staffMember) {
-      console.error('Staff member not found:', staffId);
-      alert('Staff member not found. Please try again.');
-      return;
-    }
-    if (!currentSchedule.id) {
-      console.error('Schedule ID is missing:', currentSchedule);
-      alert('Schedule ID is missing. Please refresh the page.');
+    if (!task || !staffMember) {
+      alert('Task or staff member not found.');
       return;
     }
 
     const key = `${day}-${task.name}`;
 
-    // Optimistic update - update UI immediately
+    // Optimistic update
     const tempId = `temp-${Date.now()}`;
     const optimisticAssignment = {
       id: tempId,
@@ -238,31 +250,23 @@ function MainApp() {
     saveToHistory(newAssignments);
     setAssignments(newAssignments);
 
-    // Debug log
-    console.log('Creating assignment with:', {
-      schedule_id: currentSchedule.id,
-      task_id: taskId,
-      staff_id: staffId,
-      day_of_week: getDayNumber(day),
-      day_name: day,
-      time_slot: task.name
-    });
-
-    // Sync with server in background
     try {
-      const response = await axios.post(`${API_URL}/assignments`, {
-        schedule_id: currentSchedule.id,
-        task_id: taskId,
-        staff_id: staffId,
-        day_of_week: getDayNumber(day),
-        time_slot: task.name
-      });
+      const { data, error } = await supabase
+        .from('schedule_assignments')
+        .insert([{
+          schedule_id: currentSchedule.id,
+          task_id: taskId,
+          staff_id: staffId,
+          day_of_week: getDayNumber(day),
+          time_slot: task.name
+        }])
+        .select('*, staff:staff_id(*), tasks:task_id(*)')
+        .single();
 
-      // Update with real ID from server (only if not deleted in the meantime)
+      if (error) throw error;
+
       setAssignments(prev => {
-        // Check if this assignment was deleted while the request was in flight
         if (deletedKeys.has(key)) {
-          // Remove from deletedKeys set and don't add the assignment
           setDeletedKeys(prevDeleted => {
             const newDeleted = new Set(prevDeleted);
             newDeleted.delete(key);
@@ -272,34 +276,20 @@ function MainApp() {
         }
         return {
           ...prev,
-          [key]: { ...response.data, day_of_week: day, task, staff: staffMember }
+          [key]: { ...data, day_of_week: day, task: data.tasks, staff: data.staff }
         };
       });
     } catch (error) {
-      // Rollback on error
+      // Rollback
       const rolledBack = { ...assignments };
       delete rolledBack[key];
       setAssignments(rolledBack);
-
-      if (error.response?.status === 409) {
-        alert('Conflict: Staff member already assigned at this time!');
-      } else if (error.response?.status === 401) {
-        alert('Authentication error. Please log in again.');
-        console.error('Auth error:', error.response?.data);
-      } else if (error.response?.status === 403) {
-        alert('Access denied. You need admin or manager role to make changes.');
-        console.error('Permission error:', error.response?.data);
-      } else {
-        console.error('Error creating assignment:', error);
-        console.error('Error response:', error.response?.data);
-        console.error('Error status:', error.response?.status);
-        alert(`Failed to assign staff: ${error.response?.data?.error || error.message}`);
-      }
+      console.error('Error creating assignment:', error);
+      alert(`Failed to assign staff: ${error.message}`);
     }
   };
 
   const handleRemoveAssignment = async (assignmentId) => {
-    // Find the key for this assignment
     let assignmentKey = null;
     Object.keys(assignments).forEach(key => {
       if (assignments[key].id === assignmentId) {
@@ -307,7 +297,6 @@ function MainApp() {
       }
     });
 
-    // Optimistic update - remove immediately
     const previousAssignments = { ...assignments };
     const newAssignments = { ...assignments };
     Object.keys(newAssignments).forEach(key => {
@@ -318,23 +307,24 @@ function MainApp() {
     saveToHistory(newAssignments);
     setAssignments(newAssignments);
 
-    // Skip backend sync if this is a temporary ID (optimistic update not yet confirmed)
     if (String(assignmentId).startsWith('temp-')) {
-      // Mark this key as deleted to prevent the POST response from re-adding it
       if (assignmentKey) {
         setDeletedKeys(prev => new Set(prev).add(assignmentKey));
       }
       return;
     }
 
-    // Sync with server in background
     try {
-      await axios.delete(`${API_URL}/assignments/${assignmentId}`);
+      const { error } = await supabase
+        .from('schedule_assignments')
+        .delete()
+        .eq('id', assignmentId);
+
+      if (error) throw error;
     } catch (error) {
-      // Rollback on error
       setAssignments(previousAssignments);
       console.error('Error removing assignment:', error);
-      alert('Failed to remove assignment. Please try again.');
+      alert('Failed to remove assignment.');
     }
   };
 
@@ -348,27 +338,21 @@ function MainApp() {
       const toKey = `${toDay}-${toTaskName}`;
       const toAssignment = assignments[toKey];
 
-      // If destination is occupied, swap the assignments
       if (toAssignment) {
-        // Update both assignments
+        // Swap assignments
         await Promise.all([
-          axios.put(`${API_URL}/assignments/${fromAssignment.id}`, {
+          supabase.from('schedule_assignments').update({
             task_id: toAssignment.task_id,
-            staff_id: fromAssignment.staff_id,
             day_of_week: getDayNumber(toDay),
-            time_slot: toTaskName,
-            notes: fromAssignment.notes
-          }),
-          axios.put(`${API_URL}/assignments/${toAssignment.id}`, {
+            time_slot: toTaskName
+          }).eq('id', fromAssignment.id),
+          supabase.from('schedule_assignments').update({
             task_id: fromAssignment.task_id,
-            staff_id: toAssignment.staff_id,
             day_of_week: getDayNumber(fromAssignment.day_of_week),
-            time_slot: fromAssignment.time_slot,
-            notes: toAssignment.notes
-          })
+            time_slot: fromAssignment.time_slot
+          }).eq('id', toAssignment.id)
         ]);
 
-        // Swap in local state
         const newAssignments = {
           ...assignments,
           [fromKey]: {
@@ -387,17 +371,14 @@ function MainApp() {
         saveToHistory(newAssignments);
         setAssignments(newAssignments);
       } else {
-        // Just move to empty cell
+        // Move to empty cell
         const task = tasks.find(t => t.name === toTaskName);
-        await axios.put(`${API_URL}/assignments/${fromAssignment.id}`, {
+        await supabase.from('schedule_assignments').update({
           task_id: task.id,
-          staff_id: fromAssignment.staff_id,
           day_of_week: getDayNumber(toDay),
-          time_slot: toTaskName,
-          notes: fromAssignment.notes
-        });
+          time_slot: toTaskName
+        }).eq('id', fromAssignment.id);
 
-        // Update local state
         const newAssignments = { ...assignments };
         delete newAssignments[fromKey];
         newAssignments[toKey] = {
@@ -418,8 +399,14 @@ function MainApp() {
 
   const handleAddStaff = async (staffData) => {
     try {
-      const response = await axios.post(`${API_URL}/staff`, staffData);
-      setStaff(prev => [...prev, response.data]);
+      const { data, error } = await supabase
+        .from('staff')
+        .insert([staffData])
+        .select()
+        .single();
+
+      if (error) throw error;
+      setStaff(prev => [...prev, data]);
     } catch (error) {
       console.error('Error adding staff:', error);
       alert('Failed to add staff member');
@@ -428,14 +415,21 @@ function MainApp() {
 
   const handleUpdateStaff = async (staffId, staffData) => {
     try {
-      const response = await axios.put(`${API_URL}/staff/${staffId}`, staffData);
-      setStaff(prev => prev.map(s => s.id === staffId ? response.data : s));
-      // Update assignments with new staff data
+      const { data, error } = await supabase
+        .from('staff')
+        .update(staffData)
+        .eq('id', staffId)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setStaff(prev => prev.map(s => s.id === staffId ? data : s));
       setAssignments(prev => {
         const newAssignments = { ...prev };
         Object.keys(newAssignments).forEach(key => {
           if (newAssignments[key].staff_id === staffId) {
-            newAssignments[key].staff = response.data;
+            newAssignments[key].staff = data;
           }
         });
         return newAssignments;
@@ -449,9 +443,14 @@ function MainApp() {
   const handleDeleteStaff = async (staffId) => {
     if (!confirm('Are you sure you want to delete this staff member?')) return;
     try {
-      await axios.delete(`${API_URL}/staff/${staffId}`);
+      const { error } = await supabase
+        .from('staff')
+        .delete()
+        .eq('id', staffId);
+
+      if (error) throw error;
+
       setStaff(prev => prev.filter(s => s.id !== staffId));
-      // Remove assignments for this staff member
       setAssignments(prev => {
         const newAssignments = { ...prev };
         Object.keys(newAssignments).forEach(key => {
@@ -469,8 +468,23 @@ function MainApp() {
 
   const handleAddTask = async (taskData) => {
     try {
-      const response = await axios.post(`${API_URL}/tasks`, taskData);
-      setTasks(prev => [...prev, response.data]);
+      // Get max task_order
+      const { data: existingTasks } = await supabase
+        .from('tasks')
+        .select('task_order')
+        .order('task_order', { ascending: false })
+        .limit(1);
+
+      const maxOrder = existingTasks && existingTasks.length > 0 ? existingTasks[0].task_order : 0;
+
+      const { data, error } = await supabase
+        .from('tasks')
+        .insert([{ ...taskData, task_order: maxOrder + 1 }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      setTasks(prev => [...prev, data]);
     } catch (error) {
       console.error('Error adding task:', error);
       alert('Failed to add task');
@@ -479,14 +493,21 @@ function MainApp() {
 
   const handleUpdateTask = async (taskId, taskData) => {
     try {
-      const response = await axios.put(`${API_URL}/tasks/${taskId}`, taskData);
-      setTasks(prev => prev.map(t => t.id === taskId ? response.data : t));
-      // Update assignments with new task data
+      const { data, error } = await supabase
+        .from('tasks')
+        .update(taskData)
+        .eq('id', taskId)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setTasks(prev => prev.map(t => t.id === taskId ? data : t));
       setAssignments(prev => {
         const newAssignments = { ...prev };
         Object.keys(newAssignments).forEach(key => {
           if (newAssignments[key].task_id === taskId) {
-            newAssignments[key].task = response.data;
+            newAssignments[key].task = data;
           }
         });
         return newAssignments;
@@ -500,9 +521,14 @@ function MainApp() {
   const handleDeleteTask = async (taskId) => {
     if (!confirm('Are you sure you want to delete this task?')) return;
     try {
-      await axios.delete(`${API_URL}/tasks/${taskId}`);
+      const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', taskId);
+
+      if (error) throw error;
+
       setTasks(prev => prev.filter(t => t.id !== taskId));
-      // Remove assignments for this task
       setAssignments(prev => {
         const newAssignments = { ...prev };
         Object.keys(newAssignments).forEach(key => {
@@ -520,17 +546,20 @@ function MainApp() {
 
   const handleReorderTasks = async (taskOrders, newTasksOrder) => {
     try {
-      // Optimistically update UI
       setTasks(newTasksOrder);
 
-      // Persist to backend
-      await axios.put(`${API_URL}/tasks/reorder`, { taskOrders });
+      // Update all task orders in parallel
+      const updates = taskOrders.map(({ id, task_order }) =>
+        supabase.from('tasks').update({ task_order }).eq('id', id)
+      );
+
+      await Promise.all(updates);
     } catch (error) {
       console.error('Error reordering tasks:', error);
       alert('Failed to reorder tasks');
-      // Reload tasks from server on error
-      const response = await axios.get(`${API_URL}/tasks`);
-      setTasks(response.data);
+      // Reload from database
+      const { data } = await supabase.from('tasks').select('*').order('task_order');
+      if (data) setTasks(data);
     }
   };
 
@@ -543,13 +572,19 @@ function MainApp() {
     setShowConfirmDialog(false);
 
     try {
-      await axios.delete(`${API_URL}/schedules/${currentSchedule.id}/assignments`);
+      const { error } = await supabase
+        .from('schedule_assignments')
+        .delete()
+        .eq('schedule_id', currentSchedule.id);
+
+      if (error) throw error;
+
       const newAssignments = {};
       saveToHistory(newAssignments);
       setAssignments(newAssignments);
     } catch (error) {
       console.error('Error clearing week:', error);
-      alert('Failed to clear week. Please try again.');
+      alert('Failed to clear week.');
     }
   };
 
@@ -575,10 +610,8 @@ function MainApp() {
     );
   }
 
-  // Determine which backend to use based on device
   const dndBackend = isMobile ? TouchBackend : HTML5Backend;
 
-  // Render mobile view
   if (isMobile) {
     return (
       <MobileScheduleView
@@ -606,7 +639,6 @@ function MainApp() {
     );
   }
 
-  // Render desktop view
   return (
     <DndProvider backend={dndBackend}>
       <div className="app">
@@ -702,4 +734,3 @@ function AppContent() {
 }
 
 export default App;
-

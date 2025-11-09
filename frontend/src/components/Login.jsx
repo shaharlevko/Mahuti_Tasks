@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
 import './Login.css';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 const SHOW_DEMO = import.meta.env.VITE_SHOW_DEMO !== 'false'; // Show demo by default, hide if explicitly set to 'false'
 
 function Login({ onSwitchToRegister }) {
@@ -26,8 +26,17 @@ function Login({ onSwitchToRegister }) {
     }
   };
 
-  const handleGoogleLogin = () => {
-    window.location.href = `${API_URL}/auth/google`;
+  const handleGoogleLogin = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin,
+      },
+    });
+
+    if (error) {
+      setError(error.message);
+    }
   };
 
   const handleDemoLogin = async () => {

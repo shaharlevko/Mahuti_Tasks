@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import { supabase } from '../lib/supabase';
 
 const AuthContext = createContext(null);
 
@@ -13,101 +13,158 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(() => {
-    // Check for token in URL (from OAuth redirect)
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlToken = urlParams.get('token');
-
-    if (urlToken) {
-      // Save token from URL to localStorage
-      localStorage.setItem('mahuti_token', urlToken);
-      // Clean up URL
-      window.history.replaceState({}, document.title, window.location.pathname);
-      return urlToken;
-    }
-
-    // Otherwise, get from localStorage
-    return localStorage.getItem('mahuti_token');
-  });
   const [loading, setLoading] = useState(true);
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-
-  // Configure axios to include token in all requests
+  // Load user from Supabase and fetch their role from users table
   useEffect(() => {
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    } else {
-      delete axios.defaults.headers.common['Authorization'];
+    // Check active session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        loadUserWithRole(session.user);
+      } else {
+        setLoading(false);
+      }
+    });
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        await loadUserWithRole(session.user);
+      } else {
+        setUser(null);
+        setLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const loadUserWithRole = async (authUser) => {
+    try {
+      // Fetch user data from users table to get role
+      const { data: userData, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', authUser.id)
+        .single();
+
+      if (error) {
+        console.error('Error loading user data:', error);
+        setUser(null);
+      } else {
+        // Combine auth user with database user data
+        setUser({
+          id: authUser.id,
+          email: authUser.email,
+          name: userData.name || authUser.user_metadata?.name || authUser.email,
+          role: userData.role || 'staff',
+          ...userData
+        });
+      }
+    } catch (error) {
+      console.error('Failed to load user:', error);
+      setUser(null);
+    } finally {
+      setLoading(false);
     }
-  }, [token]);
-
-  // Load user on mount or token change
-  useEffect(() => {
-    const loadUser = async () => {
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const response = await axios.get(`${API_URL}/auth/me`);
-        setUser(response.data.user);
-      } catch (error) {
-        console.error('Failed to load user:', error);
-        // Token is invalid, clear it
-        logout();
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadUser();
-  }, [token]);
+  };
 
   const login = async (email, password) => {
     try {
-      const response = await axios.post(`${API_URL}/auth/login`, {
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password
+        password,
       });
 
-      const { token: newToken, user: newUser } = response.data;
-      localStorage.setItem('mahuti_token', newToken);
-      setToken(newToken);
-      setUser(newUser);
+      if (error) {
+        return { success: false, error: error.message };
+      }
 
+      await loadUserWithRole(data.user);
       return { success: true };
     } catch (error) {
-      const message = error.response?.data?.error || 'Login failed';
-      return { success: false, error: message };
+      return { success: false, error: error.message || 'Login failed' };
     }
   };
 
   const register = async (email, password, name, inviteToken = null) => {
     try {
-      const response = await axios.post(`${API_URL}/auth/register`, {
+      // First, create the auth user
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
-        name,
-        inviteToken
+        options: {
+          data: {
+            name: name,
+          },
+        },
       });
 
-      const { token: newToken, user: newUser } = response.data;
-      localStorage.setItem('mahuti_token', newToken);
-      setToken(newToken);
-      setUser(newUser);
+      if (authError) {
+        return { success: false, error: authError.message };
+      }
 
+      if (!authData.user) {
+        return { success: false, error: 'Failed to create user' };
+      }
+
+      // Check if invitation exists and get role
+      let role = 'staff'; // default role
+      if (inviteToken) {
+        const { data: invitation, error: inviteError } = await supabase
+          .from('invitations')
+          .select('*')
+          .eq('token', inviteToken)
+          .eq('status', 'pending')
+          .single();
+
+        if (!inviteError && invitation) {
+          role = invitation.role;
+
+          // Mark invitation as used
+          await supabase
+            .from('invitations')
+            .update({
+              status: 'accepted',
+              used_by: authData.user.id,
+              used_at: new Date().toISOString()
+            })
+            .eq('id', invitation.id);
+        }
+      }
+
+      // Create user record in users table
+      const { error: userError } = await supabase
+        .from('users')
+        .insert([
+          {
+            id: authData.user.id,
+            email: email,
+            name: name,
+            role: role,
+          },
+        ]);
+
+      if (userError) {
+        console.error('Error creating user record:', userError);
+        // User auth was created but database record failed
+        // They can still log in, we'll create the record on login
+      }
+
+      await loadUserWithRole(authData.user);
       return { success: true };
     } catch (error) {
-      const message = error.response?.data?.error || 'Registration failed';
-      return { success: false, error: message };
+      return { success: false, error: error.message || 'Registration failed' };
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('mahuti_token');
-    setToken(null);
+  const logout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error('Logout error:', error);
+    }
     setUser(null);
   };
 
@@ -132,7 +189,6 @@ export const AuthProvider = ({ children }) => {
 
   const value = {
     user,
-    token,
     loading,
     login,
     register,
@@ -141,7 +197,7 @@ export const AuthProvider = ({ children }) => {
     hasRole,
     canEdit,
     isAdmin,
-    isAuthenticated: !!user
+    isAuthenticated: !!user,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

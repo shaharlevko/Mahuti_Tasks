@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useDrag } from 'react-dnd';
-import axios from 'axios';
+import { supabase } from '../lib/supabase';
 import './TaskLibrary.css';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 const SATURATED_COLORS = [
   '#FF6B58', // Coral red
@@ -88,8 +86,26 @@ function TaskLibrary({ staff, onAddStaff, onUpdateStaff, onDeleteStaff, canEdit 
   const fetchUnlinkedUsers = async () => {
     setLoadingUsers(true);
     try {
-      const response = await axios.get(`${API_URL}/users/unlinked`);
-      setUnlinkedUsers(response.data);
+      // Get all users
+      const { data: allUsers, error: usersError } = await supabase
+        .from('users')
+        .select('*');
+
+      if (usersError) throw usersError;
+
+      // Get all staff with linked user_ids
+      const { data: linkedStaff, error: staffError } = await supabase
+        .from('staff')
+        .select('user_id')
+        .not('user_id', 'is', null);
+
+      if (staffError) throw staffError;
+
+      // Filter out users that are already linked
+      const linkedUserIds = new Set(linkedStaff.map(s => s.user_id));
+      const unlinked = allUsers.filter(user => !linkedUserIds.has(user.id));
+
+      setUnlinkedUsers(unlinked);
     } catch (error) {
       console.error('Error loading unlinked users:', error);
       // If error, set empty array so form still works
