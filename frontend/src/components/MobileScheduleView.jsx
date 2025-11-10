@@ -150,19 +150,22 @@ function MobileScheduleView({
 
         {/* Day Tabs */}
         <div className="day-tabs">
-          {visibleDays.map((day, index) => (
-            <button
-              key={day}
-              className={`day-tab ${selectedDay === index ? 'active' : ''}`}
-              onClick={() => setSelectedDay(index)}
-            >
-              {day.substring(0, 3)}
-            </button>
-          ))}
-        </div>
+          {visibleDays.map((day, index) => {
+            const dayDate = new Date(weekStart);
+            dayDate.setDate(dayDate.getDate() + index);
+            const dateNumber = dayDate.getDate();
 
-        <div className="current-date">
-          {getTodayDate()}
+            return (
+              <button
+                key={day}
+                className={`day-tab ${selectedDay === index ? 'active' : ''}`}
+                onClick={() => setSelectedDay(index)}
+              >
+                <span className="day-name">{day.substring(0, 3)}</span>
+                <span className="day-number">{dateNumber}</span>
+              </button>
+            );
+          })}
         </div>
       </header>
 
