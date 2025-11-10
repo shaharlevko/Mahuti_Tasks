@@ -106,13 +106,16 @@
 }
 
 .week-nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: rgba(255, 255, 255, 0.5);
   border: none;
-  padding: 6px 12px;
+  padding: 5px 10px;
   border-radius: 15px;
-  font-size: 1em;
+  font-size: 1.15em;
   cursor: pointer;
-  font-weight: bold;
+  font-weight: 900;
   color: #000;
   transition: background 0.2s;
 }
@@ -214,11 +217,11 @@
 }
 
 .task-icon-mobile {
-  font-size: 1.8em;
+  font-size: 1.4em;
 }
 
 .task-name-mobile {
-  font-size: 1.1em;
+  font-size: 0.95em;
   font-weight: 600;
   color: #555;
 }
@@ -292,10 +295,10 @@
   width: 100%;
   background: linear-gradient(135deg, #C7ECDE 0%, #B4E7CE 100%);
   border: 2px dashed #5FB878;
-  padding: 15px;
+  padding: 10px;
   border-radius: 12px;
   font-family: inherit;
-  font-size: 1em;
+  font-size: 0.9em;
   font-weight: 600;
   cursor: pointer;
   color: #2D5F4B;
