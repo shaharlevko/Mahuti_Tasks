@@ -7,7 +7,7 @@
 /* Mobile Header */
 .mobile-header {
   background: linear-gradient(135deg, #FFCBA4 0%, #FFD8B8 100%);
-  padding: 15px;
+  padding: 10px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   position: sticky;
   top: 0;
@@ -18,24 +18,24 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 15px;
+  margin-bottom: 8px;
 }
 
 .header-title {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
 }
 
 .header-title h1 {
   color: #D47F61;
-  font-size: 1.5em;
+  font-size: 1.1em;
   margin: 0;
   text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.7);
 }
 
 .flower-icon-mobile {
-  font-size: 1.8em;
+  font-size: 1.3em;
 }
 
 .menu-btn {
@@ -88,16 +88,16 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 15px;
-  gap: 10px;
+  margin-bottom: 8px;
+  gap: 8px;
 }
 
 .week-nav-btn {
   background: rgba(255, 255, 255, 0.5);
   border: none;
-  padding: 10px 20px;
-  border-radius: 20px;
-  font-size: 1.2em;
+  padding: 6px 12px;
+  border-radius: 15px;
+  font-size: 1em;
   cursor: pointer;
   font-weight: bold;
   color: #D47F61;
@@ -109,7 +109,7 @@
 }
 
 .week-range {
-  font-size: 0.95em;
+  font-size: 0.85em;
   font-weight: 600;
   color: #8B4513;
   text-align: center;
@@ -119,11 +119,11 @@
 /* Day Tabs */
 .day-tabs {
   display: flex;
-  gap: 5px;
+  gap: 4px;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .day-tabs::-webkit-scrollbar {
@@ -132,13 +132,13 @@
 
 .day-tab {
   flex: 1;
-  min-width: 60px;
+  min-width: 55px;
   background: rgba(255, 255, 255, 0.4);
   border: none;
-  padding: 12px 8px;
-  border-radius: 12px;
+  padding: 8px 6px;
+  border-radius: 10px;
   font-family: inherit;
-  font-size: 0.9em;
+  font-size: 0.85em;
   font-weight: 600;
   cursor: pointer;
   color: #8B4513;

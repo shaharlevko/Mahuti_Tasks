@@ -214,26 +214,6 @@ function MobileScheduleView({
         })}
       </div>
 
-      {/* Undo/Redo Floating Buttons */}
-      <div className="mobile-floating-actions">
-        <button
-          className="floating-btn"
-          onClick={onUndo}
-          disabled={!canUndo}
-          title="Undo"
-        >
-          ↶
-        </button>
-        <button
-          className="floating-btn"
-          onClick={onRedo}
-          disabled={!canRedo}
-          title="Redo"
-        >
-          ↷
-        </button>
-      </div>
-
       {/* Staff Selector Bottom Sheet */}
       {showStaffSelector && (
         <div className="bottom-sheet-overlay" onClick={() => setShowStaffSelector(false)}>
