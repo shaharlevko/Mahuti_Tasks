@@ -681,7 +681,7 @@ function MainApp() {
               </div>
               {isAdmin() && (
                 <button className="btn-manage-users" onClick={() => navigate('/admin/users')}>
-                  👥 Manage Users
+                  👥 Users
                 </button>
               )}
               <button className="btn-logout" onClick={logout}>

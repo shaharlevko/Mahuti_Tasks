@@ -117,7 +117,7 @@ function MobileScheduleView({
   };
 
   const handleUserManagement = () => {
-    navigate('/users');
+    navigate('/admin/users');
     setShowMenu(false);
   };
 
@@ -210,7 +210,7 @@ function MobileScheduleView({
             </button>
             {isAdmin() && (
               <button onClick={handleUserManagement}>
-                👤 User Management
+                👤 Users
               </button>
             )}
             <button onClick={handleLogout} className="logout-btn">
