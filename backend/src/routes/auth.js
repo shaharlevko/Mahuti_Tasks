@@ -144,7 +144,7 @@ router.post('/register', async (req, res) => {
         name,
         role: userRole
       })
-      .select('id, email, name, role, created_at')
+      .select('id, email, name, role, created_at, profile_picture_url')
       .single();
 
     if (error) {
@@ -263,7 +263,7 @@ router.put('/me', requireAuth, async (req, res) => {
       .from('users')
       .update({ name, updated_at: new Date().toISOString() })
       .eq('id', req.user.id)
-      .select('id, email, name, role, created_at, updated_at')
+      .select('id, email, name, role, created_at, updated_at, profile_picture_url')
       .single();
 
     if (error) {
@@ -346,7 +346,7 @@ router.get('/users', requireAuth, requireRole('admin'), async (req, res) => {
   try {
     const { data: users, error } = await supabase
       .from('users')
-      .select('id, email, name, role, google_id, created_at, updated_at')
+      .select('id, email, name, role, google_id, created_at, updated_at, profile_picture_url')
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -396,7 +396,7 @@ router.post('/users', requireAuth, requireRole('admin'), async (req, res) => {
         name,
         role
       })
-      .select('id, email, name, role, created_at')
+      .select('id, email, name, role, created_at, profile_picture_url')
       .single();
 
     if (error) {
@@ -441,7 +441,7 @@ router.put('/users/:id', requireAuth, requireRole('admin'), async (req, res) => 
       .from('users')
       .update(updates)
       .eq('id', id)
-      .select('id, email, name, role, created_at, updated_at')
+      .select('id, email, name, role, created_at, updated_at, profile_picture_url')
       .single();
 
     if (error) {
