@@ -46,7 +46,7 @@ const requireAuth = async (req, res, next) => {
     // Fetch user from database to ensure they still exist
     const { data: user, error } = await supabase
       .from('users')
-      .select('id, email, name, role, created_at')
+      .select('id, email, name, role, created_at, profile_picture_url')
       .eq('id', decoded.id)
       .single();
 
@@ -96,7 +96,7 @@ const optionalAuth = async (req, res, next) => {
     if (decoded) {
       const { data: user, error } = await supabase
         .from('users')
-        .select('id, email, name, role, created_at')
+        .select('id, email, name, role, created_at, profile_picture_url')
         .eq('id', decoded.id)
         .single();
 
