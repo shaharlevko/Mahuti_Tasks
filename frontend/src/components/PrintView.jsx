@@ -192,7 +192,7 @@ function PrintView({ tasks, staff, assignments, weekStartDate, showDays, onClose
                     <span className="task-name">{task.name}</span>
                   </td>
                   {DAYS.map((day, dayIndex) => {
-                    const key = `${dayIndex}-${task.name}`;
+                    const key = `${day}-${task.name}`;
                     const assignment = assignments[key];
                     return (
                       <td

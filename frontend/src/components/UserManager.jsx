@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import './UserManager.css';
+import LoadingAnimation from './LoadingAnimation';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
@@ -149,7 +150,7 @@ function UserManager() {
   };
 
   if (authLoading || loading) {
-    return <div className="loading">Loading...</div>;
+    return <LoadingAnimation size="default" message="Loading user management..." />;
   }
 
   if (!isAdmin()) {
