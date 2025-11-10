@@ -48,6 +48,20 @@
   font-weight: bold;
 }
 
+.user-avatar-mobile {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  border: 2.5px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 13px;
+  background: white;
+  color: #000;
+}
+
 .mobile-menu {
   background: white;
   border-radius: 12px;

@@ -5,6 +5,7 @@ import { TouchBackend } from 'react-dnd-touch-backend';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from './contexts/AuthContext';
+import { getInitials, getRoleBorderColor } from './utils/userUtils';
 import Login from './components/Login';
 import Register from './components/Register';
 import WeeklySchedule from './components/WeeklySchedule';
@@ -660,6 +661,7 @@ function MainApp() {
         onAddTask={handleAddTask}
         onUpdateTask={handleUpdateTask}
         onDeleteTask={handleDeleteTask}
+        user={user}
       />
     );
   }
@@ -674,9 +676,9 @@ function MainApp() {
               <img src="/mahuti-logo.svg" alt="Mahuti" className="header-logo" />
             </div>
             <div className="header-actions">
-              <span className="user-info">
-                👤 {user.name} ({user.role})
-              </span>
+              <div className="user-avatar" style={{ borderColor: getRoleBorderColor(user.role) }}>
+                {getInitials(user.name)}
+              </div>
               {isAdmin() && (
                 <button className="btn-manage-users" onClick={() => navigate('/admin/users')}>
                   👥 Manage Users

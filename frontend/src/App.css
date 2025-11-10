@@ -185,3 +185,17 @@ body {
     height: 59px;
   }
 }
+
+.user-avatar {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  border: 3px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 16px;
+  background: white;
+  color: #000;
+}

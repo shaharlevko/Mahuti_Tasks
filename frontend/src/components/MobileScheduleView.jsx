@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import { useAuth } from '../contexts/AuthContext';
+import { getInitials, getRoleBorderColor } from '../utils/userUtils';
 import { useClickOutside } from '../hooks/useClickOutside';
 import './MobileScheduleView.css';
 
@@ -34,6 +36,12 @@ function MobileScheduleView({
   const [showMenu, setShowMenu] = useState(false);
   const [showStaffManager, setShowStaffManager] = useState(false);
   const [showTaskManager, setShowTaskManager] = useState(false);
+
+  // Get user from auth context
+  const { user } = useAuth();
+
+  // Track scroll for header animations
+  const [scrollY, setScrollY] = useState(0);
 
   // Ref for click-outside detection on mobile menu
   const menuRef = useRef(null);
@@ -87,6 +95,14 @@ function MobileScheduleView({
     }
   };
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollY(window.scrollY);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const getTodayDate = () => {
     const today = new Date(weekStart);
     today.setDate(today.getDate() + selectedDay);
@@ -96,14 +112,24 @@ function MobileScheduleView({
   return (
     <div className="mobile-schedule-view">
       {/* Mobile Header */}
-      <header className="mobile-header">
+      <header className="mobile-header" style={{ paddingTop: scrollY > 50 ? '5px' : '10px', paddingBottom: scrollY > 50 ? '5px' : '10px', transition: 'padding 0.3s' }}>
         <div className="mobile-header-top">
           <div className="header-title">
-            <img src="/mahuti-logo.svg" alt="Mahuti" className="mobile-header-logo" />
+            <img src="/mahuti-logo.svg" alt="Mahuti" className="mobile-header-logo" style={{ opacity: scrollY > 50 ? 0 : 1, transition: 'opacity 0.3s' }} />
           </div>
+          {user && (
+            <div className="user-avatar-mobile" style={{ 
+              borderColor: getRoleBorderColor(user.role),
+              opacity: scrollY > 50 ? 0 : 1, 
+              transition: 'opacity 0.3s'
+            }}>
+              {getInitials(user.name)}
+            </div>
+          )}
           <button
             className="menu-btn"
             onClick={() => setShowMenu(!showMenu)}
+            style={{ opacity: scrollY > 50 ? 0 : 1, transition: 'opacity 0.3s' }}
           >
             ☰
           </button>

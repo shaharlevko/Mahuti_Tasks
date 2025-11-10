@@ -24,7 +24,9 @@
       "Bash(lsof:*)",
       "Bash(findstr:*)",
       "Bash(App.jsx)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(cat:*)",
+      "Bash(python:*)"
     ],
     "deny": [],
     "ask": []
