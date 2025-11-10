@@ -677,7 +677,20 @@ function MainApp() {
             </div>
             <div className="header-actions">
               <div className="user-avatar" style={{ borderColor: getRoleBorderColor(user.role) }}>
-                {getInitials(user.name)}
+                {user.profile_picture_url ? (
+                  <img
+                    src={user.profile_picture_url}
+                    alt={user.name}
+                    className="user-avatar-img"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'flex';
+                    }}
+                  />
+                ) : null}
+                <span className="user-avatar-initials" style={{ display: user.profile_picture_url ? 'none' : 'flex' }}>
+                  {getInitials(user.name)}
+                </span>
               </div>
               {isAdmin() && (
                 <button className="btn-manage-users" onClick={() => navigate('/admin/users')}>

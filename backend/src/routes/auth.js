@@ -18,6 +18,9 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
       },
       async (accessToken, refreshToken, profile, done) => {
         try {
+          // Extract profile picture URL from Google profile
+          const profilePictureUrl = profile.photos?.[0]?.value || null;
+
           // Find user by Google ID
           const { data: existingUser, error: fetchError } = await supabase
             .from('users')
@@ -26,6 +29,20 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
             .single();
 
           if (existingUser) {
+            // Update profile picture if it has changed
+            if (existingUser.profile_picture_url !== profilePictureUrl) {
+              const { data: updatedUser } = await supabase
+                .from('users')
+                .update({
+                  profile_picture_url: profilePictureUrl,
+                  updated_at: new Date().toISOString()
+                })
+                .eq('id', existingUser.id)
+                .select()
+                .single();
+
+              return done(null, updatedUser || existingUser);
+            }
             return done(null, existingUser);
           }
 
@@ -39,7 +56,8 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
               email,
               google_id: profile.id,
               name,
-              role: 'staff'
+              role: 'staff',
+              profile_picture_url: profilePictureUrl
             })
             .select()
             .single();
