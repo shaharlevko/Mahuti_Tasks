@@ -667,3 +667,11 @@
     transform: rotate(360deg);
   }
 }
+
+/* Mobile responsive styles */
+@media (max-width: 768px) {
+  /* Hide undo/redo buttons on mobile */
+  .schedule-footer {
+    display: none;
+  }
+}

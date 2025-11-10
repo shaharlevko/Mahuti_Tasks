@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useDrop, useDrag } from 'react-dnd';
+import { useClickOutside } from '../hooks/useClickOutside';
 import './WeeklySchedule.css';
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -269,6 +270,12 @@ function WeeklySchedule({
   const [selectedEmojiCategory, setSelectedEmojiCategory] = useState('Food & Drinks');
   const [editingCell, setEditingCell] = useState(null);
 
+  // Ref for click-outside detection on emoji picker
+  const emojiPickerRef = useRef(null);
+
+  // Close emoji picker when clicking outside
+  useClickOutside(emojiPickerRef, () => setShowEmojiPicker(false), showEmojiPicker);
+
   const visibleDays = DAYS.slice(0, showDays);
 
   // Format the week range for display
@@ -516,7 +523,7 @@ function WeeklySchedule({
                     </div>
                   </div>
                   {showEmojiPicker && (
-                    <div className="emoji-picker-inline">
+                    <div className="emoji-picker-inline" ref={emojiPickerRef}>
                       <div className="emoji-categories">
                         {Object.keys(EMOJI_CATEGORIES).map((category) => (
                           <button

@@ -130,6 +130,63 @@ function MainApp() {
     }
   }, [weekStartDate]);
 
+  // Poll for updates every 5 seconds
+  useEffect(() => {
+    if (!currentSchedule) return;
+
+    const pollInterval = setInterval(async () => {
+      try {
+        // Fetch latest assignments from server
+        const scheduleRes = await axios.get(`${API_URL}/schedules/by-week/${weekStartDate}`);
+        const schedule = scheduleRes.data;
+
+        // Transform assignments to map
+        const remoteAssignmentsMap = {};
+        if (schedule.assignments && schedule.assignments.length > 0) {
+          schedule.assignments.forEach(assignment => {
+            const dayName = getDayName(assignment.day_of_week);
+            const key = `${dayName}-${assignment.time_slot}`;
+            remoteAssignmentsMap[key] = {
+              ...assignment,
+              day_of_week: dayName,
+              task: {
+                id: assignment.task_id,
+                name: assignment.task_name,
+                icon: assignment.task_icon,
+                color: assignment.task_color
+              },
+              staff: {
+                id: assignment.staff_id,
+                name: assignment.staff_name,
+                color: assignment.staff_color
+              }
+            };
+          });
+        }
+
+        // Check if there are actual differences
+        const currentKeys = Object.keys(assignments);
+        const remoteKeys = Object.keys(remoteAssignmentsMap);
+
+        const hasChanges = currentKeys.length !== remoteKeys.length ||
+                           currentKeys.some(key => !remoteAssignmentsMap[key]) ||
+                           remoteKeys.some(key => !assignments[key]);
+
+        // Only update if there are changes
+        if (hasChanges) {
+          setAssignments(remoteAssignmentsMap);
+          // Update history with synced state
+          setHistory(prev => [...prev, JSON.parse(JSON.stringify(remoteAssignmentsMap))]);
+          setCurrentHistoryIndex(prev => prev + 1);
+        }
+      } catch (error) {
+        console.error('Polling error:', error);
+      }
+    }, 5000); // Poll every 5 seconds
+
+    return () => clearInterval(pollInterval);
+  }, [currentSchedule, weekStartDate, assignments]);
+
   const loadInitialData = async () => {
     try {
       const [staffRes, tasksRes] = await Promise.all([

@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import { useClickOutside } from '../hooks/useClickOutside';
 import './MobileScheduleView.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
@@ -33,6 +34,12 @@ function MobileScheduleView({
   const [showMenu, setShowMenu] = useState(false);
   const [showStaffManager, setShowStaffManager] = useState(false);
   const [showTaskManager, setShowTaskManager] = useState(false);
+
+  // Ref for click-outside detection on mobile menu
+  const menuRef = useRef(null);
+
+  // Close menu when clicking outside
+  useClickOutside(menuRef, () => setShowMenu(false), showMenu);
 
   const visibleDays = DAYS.slice(0, showDays);
 
@@ -105,7 +112,7 @@ function MobileScheduleView({
 
         {/* Mobile Menu Dropdown */}
         {showMenu && (
-          <div className="mobile-menu">
+          <div className="mobile-menu" ref={menuRef}>
             <button onClick={() => { setShowStaffManager(true); setShowMenu(false); }}>
               👥 Manage Staff
             </button>
