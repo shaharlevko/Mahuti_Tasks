@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { getInitials, getRoleBorderColor } from '../utils/userUtils';
 import { useClickOutside } from '../hooks/useClickOutside';
@@ -38,7 +39,8 @@ function MobileScheduleView({
   const [showTaskManager, setShowTaskManager] = useState(false);
 
   // Get user from auth context
-  const { user } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
+  const navigate = useNavigate();
 
   // Track scroll for header animations
   const [scrollY, setScrollY] = useState(0);
@@ -109,6 +111,16 @@ function MobileScheduleView({
     return today.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
   };
 
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  const handleUserManagement = () => {
+    navigate('/users');
+    setShowMenu(false);
+  };
+
   return (
     <div className="mobile-schedule-view">
       {/* Mobile Header */}
@@ -137,27 +149,6 @@ function MobileScheduleView({
             </div>
           )}
         </div>
-
-        {/* Mobile Menu Dropdown */}
-        {showMenu && (
-          <div className="mobile-menu" ref={menuRef}>
-            <button onClick={() => { setShowStaffManager(true); setShowMenu(false); }}>
-              👥 Manage Staff
-            </button>
-            <button onClick={() => { setShowTaskManager(true); setShowMenu(false); }}>
-              📋 Manage Tasks
-            </button>
-            <button onClick={() => { onShowPrintView(); setShowMenu(false); }}>
-              🖨️ Print Schedule
-            </button>
-            <button
-              onClick={() => { handleClearWeek(); setShowMenu(false); }}
-              className="danger-btn"
-            >
-              🗑️ Clear Week
-            </button>
-          </div>
-        )}
 
         {/* Week Navigation */}
         <div className="mobile-week-nav">
@@ -196,6 +187,38 @@ function MobileScheduleView({
           })}
         </div>
       </header>
+
+      {/* Blur Backdrop and Mobile Menu Popup */}
+      {showMenu && (
+        <>
+          <div className="menu-blur-backdrop" onClick={() => setShowMenu(false)} />
+          <div className="mobile-menu-popup" ref={menuRef}>
+            <button onClick={() => { setShowStaffManager(true); setShowMenu(false); }}>
+              👥 Manage Staff
+            </button>
+            <button onClick={() => { setShowTaskManager(true); setShowMenu(false); }}>
+              📋 Manage Tasks
+            </button>
+            <button onClick={() => { onShowPrintView(); setShowMenu(false); }}>
+              🖨️ Print Schedule
+            </button>
+            <button
+              onClick={() => { handleClearWeek(); setShowMenu(false); }}
+              className="danger-btn"
+            >
+              🗑️ Clear Week
+            </button>
+            {isAdmin() && (
+              <button onClick={handleUserManagement}>
+                👤 User Management
+              </button>
+            )}
+            <button onClick={handleLogout} className="logout-btn">
+              🚪 Logout
+            </button>
+          </div>
+        </>
+      )}
 
       {/* Task List for Selected Day */}
       <div className="mobile-task-list">
