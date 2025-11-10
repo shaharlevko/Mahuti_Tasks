@@ -184,6 +184,10 @@ body {
   .header-logo {
     height: 59px;
   }
+
+  .mobile-header-logo {
+    height: 66px;
+  }
 }
 
 .user-avatar {

@@ -26,7 +26,8 @@
       "Bash(App.jsx)",
       "Bash(git log:*)",
       "Bash(cat:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(tasklist:*)"
     ],
     "deny": [],
     "ask": []
