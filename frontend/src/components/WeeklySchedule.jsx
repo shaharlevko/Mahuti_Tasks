@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { useDrop, useDrag } from 'react-dnd';
 import { useClickOutside } from '../hooks/useClickOutside';
+import LoadingAnimation from './LoadingAnimation';
 import './WeeklySchedule.css';
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -369,32 +370,14 @@ function WeeklySchedule({
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: 'rgba(255, 255, 255, 0.8)',
+          backgroundColor: 'rgba(255, 255, 255, 0.9)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           zIndex: 1000,
           borderRadius: '8px'
         }}>
-          <div style={{
-            padding: '20px',
-            backgroundColor: 'white',
-            borderRadius: '8px',
-            boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px'
-          }}>
-            <div style={{
-              width: '24px',
-              height: '24px',
-              border: '3px solid #f3f3f3',
-              borderTop: '3px solid #3498db',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite'
-            }}></div>
-            <span style={{ fontSize: '16px', color: '#333' }}>Loading week...</span>
-          </div>
+          <LoadingAnimation size="small" message="Loading week..." fullScreen={false} />
         </div>
       )}
       <div className="schedule-controls">

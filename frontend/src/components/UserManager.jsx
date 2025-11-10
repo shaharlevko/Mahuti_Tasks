@@ -163,9 +163,7 @@ function UserManager() {
       <header className="user-manager-header">
         <div className="header-content">
           <div className="header-left">
-            <span className="flower-icon">🌻</span>
             <h1>User Management</h1>
-            <span className="flower-icon">🌻</span>
           </div>
           <button className="btn-back" onClick={() => navigate('/')}>
             ← Back to Schedule

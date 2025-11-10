@@ -99,8 +99,7 @@ function MobileScheduleView({
       <header className="mobile-header">
         <div className="mobile-header-top">
           <div className="header-title">
-            <span className="flower-icon-mobile">🌻</span>
-            <h1>Mahuti Schedule</h1>
+            <img src="/mahuti-logo.svg" alt="Mahuti" className="mobile-header-logo" />
           </div>
           <button
             className="menu-btn"

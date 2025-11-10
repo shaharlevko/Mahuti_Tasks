@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import LoadingAnimation from './LoadingAnimation';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import './InviteAccept.css';
@@ -92,7 +93,7 @@ function InviteAccept() {
     return (
       <div className="invite-accept">
         <div className="invite-card">
-          <div className="loading-spinner">Loading...</div>
+          <LoadingAnimation size="small" fullScreen={false} />
         </div>
       </div>
     );
@@ -103,9 +104,7 @@ function InviteAccept() {
       <div className="invite-accept">
         <div className="invite-card">
           <div className="invite-header">
-            <span className="flower-icon">🌻</span>
             <h1>Mahuti Tasks</h1>
-            <span className="flower-icon">🌻</span>
           </div>
 
           <div className="error-container">
@@ -128,9 +127,7 @@ function InviteAccept() {
     <div className="invite-accept">
       <div className="invite-card">
         <div className="invite-header">
-          <span className="flower-icon">🌻</span>
           <h1>Mahuti Tasks</h1>
-          <span className="flower-icon">🌻</span>
         </div>
 
         <h2>Welcome!</h2>

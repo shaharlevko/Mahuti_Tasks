@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
+import LoadingAnimation from './LoadingAnimation';
 import './SharedView.css';
 
 const API_URL = 'http://localhost:3001/api';
@@ -64,7 +65,7 @@ function SharedView() {
   if (loading) {
     return (
       <div className="shared-view">
-        <div className="loading-message">Loading schedule...</div>
+        <LoadingAnimation size="default" message="Loading schedule..." />
       </div>
     );
   }
@@ -99,16 +100,10 @@ function SharedView() {
   return (
     <div className="shared-view">
       <div className="shared-header">
-        <div className="flower-decoration left">
-          <div className="flower">🌻</div>
-        </div>
         <div className="title-container">
           <h1 className="shared-title">Weekly Task Schedule</h1>
           <p className="week-dates">{weekDateRange}</p>
           <p className="read-only-badge">📖 Read-Only View</p>
-        </div>
-        <div className="flower-decoration right">
-          <div className="flower">🌻</div>
         </div>
       </div>
 
@@ -172,19 +167,6 @@ function SharedView() {
       </div>
 
       <div className="shared-footer">
-        <div className="footer-decorations">
-          <span className="decoration">🦋</span>
-          <span className="decoration">🌸</span>
-          <span className="decoration">🌼</span>
-          <span className="decoration">🌺</span>
-          <span className="decoration">🌻</span>
-          <span className="decoration">🌷</span>
-          <span className="decoration">🌹</span>
-          <span className="decoration">🌳</span>
-        </div>
-        <p className="powered-by">
-          Created with Mahuti Weekly Task Schedule
-        </p>
       </div>
     </div>
   );

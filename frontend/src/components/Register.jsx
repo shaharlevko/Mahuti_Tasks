@@ -45,9 +45,7 @@ function Register({ onSwitchToLogin }) {
     <div className="login-container">
       <div className="login-card">
         <div className="login-header">
-          <span className="flower-icon">🌻</span>
           <h1>Mahuti Tasks</h1>
-          <span className="flower-icon">🌻</span>
         </div>
 
         <h2>Create Account</h2>

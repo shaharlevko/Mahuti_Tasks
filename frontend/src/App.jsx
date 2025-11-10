@@ -12,6 +12,7 @@ import TaskLibrary from './components/TaskLibrary';
 import PrintView from './components/PrintView';
 import ConfirmDialog from './components/ConfirmDialog';
 import MobileScheduleView from './components/MobileScheduleView';
+import LoadingAnimation from './components/LoadingAnimation';
 import './App.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
@@ -615,7 +616,7 @@ function MainApp() {
   };
 
   if (loading) {
-    return <div className="loading">Loading Mahuti Tasks...</div>;
+    return <LoadingAnimation size="default" message="Loading Mahuti Tasks..." />;
   }
 
   if (showPrintView) {
@@ -670,9 +671,7 @@ function MainApp() {
         <header className="app-header">
           <div className="header-content">
             <div className="header-left">
-              <span className="flower-icon">🌻</span>
-              <h1>Mahuti Weekly Task Schedule</h1>
-              <span className="flower-icon">🌻</span>
+              <img src="/mahuti-logo.svg" alt="Mahuti" className="header-logo" />
             </div>
             <div className="header-actions">
               <span className="user-info">
@@ -744,7 +743,7 @@ function AppContent() {
   const [showRegister, setShowRegister] = useState(false);
 
   if (loading) {
-    return <div className="loading">Loading Mahuti Tasks...</div>;
+    return <LoadingAnimation size="default" message="Loading Mahuti Tasks..." />;
   }
 
   if (!user) {

@@ -38,10 +38,6 @@
   gap: 20px;
 }
 
-.flower-decoration {
-  font-size: 2.5em;
-  animation: rotate 20s linear infinite;
-}
 
 @keyframes rotate {
   from {

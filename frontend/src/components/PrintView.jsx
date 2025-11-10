@@ -165,15 +165,9 @@ function PrintView({ tasks, staff, assignments, weekStartDate, showDays, onClose
       <div className="print-content" ref={printContentRef}>
         {/* Decorative header with flowers */}
         <div className="print-header">
-          <div className="flower-decoration left">
-            <div className="flower">🌻</div>
-          </div>
           <div className="title-container">
             <h1 className="print-title">Weekly Task Schedule</h1>
             <p className="week-dates">{weekDateRange}</p>
-          </div>
-          <div className="flower-decoration right">
-            <div className="flower">🌻</div>
           </div>
         </div>
 
@@ -224,16 +218,6 @@ function PrintView({ tasks, staff, assignments, weekStartDate, showDays, onClose
 
         {/* Decorative footer with nature elements */}
         <div className="print-footer">
-          <div className="footer-decorations">
-            <span className="decoration">🦋</span>
-            <span className="decoration">🌸</span>
-            <span className="decoration">🌼</span>
-            <span className="decoration">🌺</span>
-            <span className="decoration">🌻</span>
-            <span className="decoration">🌷</span>
-            <span className="decoration">🌹</span>
-            <span className="decoration">🌳</span>
-          </div>
         </div>
       </div>
     </div>

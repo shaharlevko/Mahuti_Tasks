@@ -19,7 +19,7 @@ body {
 
 /* Header */
 .app-header {
-  background: linear-gradient(135deg, #FFCBA4 0%, #FFD8B8 100%);
+  background: linear-gradient(120deg, rgba(254, 166, 102, 0.6), rgba(253, 106, 79, 0.6), rgba(254, 163, 198, 0.6), rgba(137, 137, 182, 0.6), rgba(138, 215, 235, 0.6), rgba(138, 215, 102, 0.6), rgba(255, 217, 102, 0.6));
   border-radius: 20px;
   padding: 20px;
   margin-bottom: 30px;
@@ -39,20 +39,11 @@ body {
 }
 
 .header-left h1 {
-  color: #D47F61;
+  color: #000;
   font-size: 2.5em;
-  text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.7);
+  text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.5);
 }
 
-.flower-icon {
-  font-size: 3em;
-  animation: rotate 3s ease-in-out infinite;
-}
-
-@keyframes rotate {
-  0%, 100% { transform: rotate(0deg); }
-  50% { transform: rotate(10deg); }
-}
 
 .header-actions {
   display: flex;
@@ -177,12 +168,20 @@ body {
     font-size: 1.5em;
   }
 
-  .flower-icon {
-    font-size: 2em;
-  }
 
   .btn-print {
     padding: 12px 20px;
     font-size: 1em;
+  }
+}
+
+.header-logo {
+  height: 78px;
+  width: auto;
+}
+
+@media (max-width: 768px) {
+  .header-logo {
+    height: 59px;
   }
 }
