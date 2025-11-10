@@ -195,7 +195,7 @@
 .mobile-task-card {
   background: white;
   border-radius: 16px;
-  padding: 15px;
+  padding: 10px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   transition: transform 0.2s, box-shadow 0.2s;
 }
@@ -208,7 +208,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   padding-left: 8px;
   border-left: 4px solid;
 }
@@ -228,7 +228,7 @@
   justify-content: space-between;
   align-items: center;
   background: linear-gradient(135deg, #F8F8F8 0%, #F0F0F0 100%);
-  padding: 12px;
+  padding: 8px;
   border-radius: 12px;
 }
 
@@ -253,7 +253,7 @@
 
 .staff-name-mobile {
   font-weight: 600;
-  font-size: 1em;
+  font-size: 1.3em;
 }
 
 .assignment-actions {
@@ -263,11 +263,11 @@
 
 .change-btn,
 .remove-btn-mobile {
-  padding: 8px 15px;
+  padding: 5px 9px;
   border: none;
   border-radius: 8px;
   font-family: inherit;
-  font-size: 0.9em;
+  font-size: 0.54em;
   font-weight: 600;
   cursor: pointer;
   transition: transform 0.2s;
