@@ -33,8 +33,8 @@ git push
 
 5. Add Environment Variables:
    - Click "Environment Variables"
-   - Add: `VITE_API_URL` = `https://your-backend-url/api`
-   - (Replace with your actual backend URL)
+   - Add: `VITE_API_URL` = `https://mahuti-tasks-backend.onrender.com/api`
+   - Add: `VITE_SHOW_DEMO` = `false` (to hide demo button)
 
 6. Click "Deploy"
 
