@@ -250,7 +250,7 @@
 /* Task List */
 .mobile-task-list {
   padding: 15px;
-  padding-bottom: 90px;
+  padding-bottom: 70px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -415,14 +415,13 @@
   left: 0;
   right: 0;
   display: flex;
-  gap: 12px;
-  padding: 12px 15px;
-  padding-bottom: calc(12px + env(safe-area-inset-bottom));
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.08);
+  gap: 8px;
+  padding: 8px 12px;
+  padding-bottom: calc(8px + env(safe-area-inset-bottom));
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(255, 255, 255, 0.4);
   z-index: 90;
 }
 
@@ -431,38 +430,38 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  min-height: 44px;
-  padding: 10px 16px;
+  gap: 6px;
+  min-height: 40px;
+  padding: 8px 12px;
   border: none;
-  border-radius: 12px;
+  border-radius: 10px;
   font-family: inherit;
-  font-size: 0.95em;
+  font-size: 0.85em;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, background 0.2s;
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .bottom-action-btn:active {
-  transform: scale(0.97);
+  transform: scale(0.96);
 }
 
 .bottom-action-btn .btn-icon {
-  font-size: 1.2em;
+  font-size: 1.1em;
 }
 
 .bottom-action-btn .btn-text {
-  font-size: 1em;
+  font-size: 0.95em;
 }
 
 .view-schedule-btn {
-  background: linear-gradient(135deg, #B4D7E8 0%, #A0CCE0 100%);
   color: #2F4F4F;
 }
 
 .clear-week-btn {
-  background: linear-gradient(135deg, #FFB5A7 0%, #FFA8A0 100%);
   color: #8B4513;
 }
 
