@@ -9,16 +9,14 @@ import InviteAccept from './components/InviteAccept.jsx'
 import { AuthProvider } from './contexts/AuthContext.jsx'
 
 createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <BrowserRouter>
-      <AuthProvider>
-        <Routes>
-          <Route path="/" element={<App />} />
-          <Route path="/admin/users" element={<UserManager />} />
-          <Route path="/invite/:token" element={<InviteAccept />} />
-          <Route path="/shared/:scheduleId" element={<SharedView />} />
-        </Routes>
-      </AuthProvider>
-    </BrowserRouter>
-  </StrictMode>,
+  <BrowserRouter>
+    <AuthProvider>
+      <Routes>
+        <Route path="/" element={<App />} />
+        <Route path="/admin/users" element={<UserManager />} />
+        <Route path="/invite/:token" element={<InviteAccept />} />
+        <Route path="/shared/:scheduleId" element={<SharedView />} />
+      </Routes>
+    </AuthProvider>
+  </BrowserRouter>,
 )

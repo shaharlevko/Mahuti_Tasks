@@ -42,9 +42,6 @@ function MobileScheduleView({
   const { user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
 
-  // Track scroll for header animations
-  const [scrollY, setScrollY] = useState(0);
-
   // Ref for click-outside detection on mobile menu
   const menuRef = useRef(null);
 
@@ -97,14 +94,6 @@ function MobileScheduleView({
     }
   };
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrollY(window.scrollY);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
   const getTodayDate = () => {
     const today = new Date(weekStart);
     today.setDate(today.getDate() + selectedDay);
@@ -124,23 +113,16 @@ function MobileScheduleView({
   return (
     <div className="mobile-schedule-view">
       {/* Mobile Header */}
-      <header className="mobile-header" style={{
-        paddingTop: scrollY > 50 ? '5px' : '10px',
-        paddingBottom: scrollY > 50 ? '5px' : '10px',
-        transform: `translateY(-${Math.min(scrollY, 65)}px)`,
-        transition: 'padding 0.3s'
-      }}>
+      <header className="mobile-header">
         <div className="mobile-header-top">
           <div className="header-title">
-            <img src="/mahuti-logo.svg" alt="Mahuti" className="mobile-header-logo" style={{ opacity: scrollY > 50 ? 0 : 1, transition: 'opacity 0.3s' }} />
+            <img src="/mahuti-logo.svg" alt="Mahuti" className="mobile-header-logo" />
           </div>
           {user && (
             <div
               className="user-avatar-mobile"
               style={{
                 borderColor: getRoleBorderColor(user.role),
-                opacity: scrollY > 50 ? 0 : 1,
-                transition: 'opacity 0.3s',
                 cursor: 'pointer'
               }}
               onClick={() => setShowMenu(!showMenu)}
