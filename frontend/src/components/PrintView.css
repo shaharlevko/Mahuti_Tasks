@@ -164,11 +164,11 @@
   overflow: visible;
 }
 
-/* Force print layout for PDF generation */
+/* Force print layout for PDF generation - MUST MATCH PRINT STYLES EXACTLY */
 .print-content.force-print-layout {
   width: 277mm !important;
   max-width: 277mm !important;
-  padding: 5mm !important;
+  padding: 3mm 5mm !important;
   margin: 0 !important;
   box-shadow: none !important;
   border-radius: 0 !important;
@@ -176,8 +176,8 @@
 }
 
 .force-print-layout .print-header {
-  margin-bottom: 4mm !important;
-  gap: 6mm !important;
+  margin-bottom: 2mm !important;
+  gap: 5mm !important;
 }
 
 .force-print-layout .print-title {
@@ -194,27 +194,56 @@
   font-size: 1.5em !important;
 }
 
+.force-print-layout .title-container {
+  margin: 0 6mm !important;
+}
+
+.force-print-layout .print-table-container {
+  margin: 1mm 0 !important;
+}
+
 .force-print-layout .print-table {
   font-size: 1rem !important;
   table-layout: fixed !important;
+  border: 2px solid #B4E7CE !important;
+  border-radius: 6px !important;
 }
 
 .force-print-layout .print-table th {
   font-size: 1.4em !important;
   padding: 3mm 2mm !important;
+  border-right: 1.5px solid #B4E7CE !important;
+  border-bottom: 2px solid #B4E7CE !important;
+  white-space: nowrap !important;
+  line-height: 1.2 !important;
 }
 
 .force-print-layout .print-table td {
   padding: 3mm 2mm !important;
+  word-wrap: break-word !important;
+  page-break-inside: avoid !important;
+  vertical-align: middle !important;
 }
 
 .force-print-layout .print-table .task-column {
   font-size: 1.3em !important;
   width: 35mm !important;
+  padding-left: 3mm !important;
+  padding-right: 2mm !important;
+  white-space: nowrap !important;
+}
+
+.force-print-layout .print-table .task-name-cell {
+  gap: 2mm !important;
+  white-space: nowrap !important;
+  padding: 3mm 3mm !important;
 }
 
 .force-print-layout .print-table .task-name {
   font-size: 1.3em !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  line-height: 1.2 !important;
 }
 
 .force-print-layout .print-table .task-icon {
@@ -223,15 +252,17 @@
 
 .force-print-layout .staff-name-print {
   font-size: 1.35em !important;
+  line-height: 1.2 !important;
 }
 
 .force-print-layout .footer-decorations {
   font-size: 1.2em !important;
-  gap: 4mm !important;
+  gap: 3mm !important;
+  margin-top: 0 !important;
 }
 
 .force-print-layout .print-footer {
-  margin-top: 3mm !important;
+  margin-top: 1mm !important;
 }
 
 /* Print header with decorations */
