@@ -1,7 +1,7 @@
 .user-manager {
   min-height: 100vh;
   background-color: #FFF9F0;
-  font-family: 'Comic Sans MS', cursive, sans-serif;
+  font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', cursive, sans-serif;
 }
 
 .user-manager-header {
