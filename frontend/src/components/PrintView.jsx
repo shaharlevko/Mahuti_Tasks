@@ -97,9 +97,7 @@ function PrintView({ tasks, staff, assignments, weekStartDate, showDays, onClose
           className="logo-back-btn"
           onClick={onClose}
         />
-      </div>
-      <div className="print-controls no-print">
-        <div className="action-buttons">
+        <div className="header-actions">
           <button onClick={handlePrint} className="btn-primary btn-print">
             🖨️ Print
           </button>

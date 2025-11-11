@@ -9,6 +9,7 @@
   background: linear-gradient(120deg, rgba(254, 166, 102, 0.6), rgba(253, 106, 79, 0.6), rgba(254, 163, 198, 0.6), rgba(137, 137, 182, 0.6), rgba(138, 215, 235, 0.6), rgba(138, 215, 102, 0.6), rgba(255, 217, 102, 0.6));
   display: flex;
   align-items: center;
+  justify-content: space-between;
 }
 
 .logo-back-btn {
@@ -26,12 +27,10 @@
   transform: scale(0.98);
 }
 
-.print-controls {
+.header-actions {
   display: flex;
-  margin-bottom: 30px;
-  margin-top: 20px;
-  justify-content: center;
-  width: 100%;
+  gap: 12px;
+  align-items: center;
 }
 
 .action-buttons {
