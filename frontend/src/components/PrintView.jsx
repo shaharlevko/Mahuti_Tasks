@@ -96,7 +96,7 @@ function PrintView({ tasks, staff, assignments, weekStartDate, showDays, onClose
             🖨️ Print
           </button>
           <button onClick={onClose} className="btn-secondary">
-            ← Back
+            ← Back to edit
           </button>
           <button
             onClick={handleDownloadPDF}

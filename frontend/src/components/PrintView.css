@@ -340,17 +340,18 @@
 
   /* Hide Print button on mobile */
   .btn-print {
-    display: none;
+    display: none !important;
   }
 
-  /* Keep buttons in single horizontal row on mobile */
+  /* Keep buttons in single horizontal row on mobile - Back left, Download right */
   .action-buttons {
     gap: 8px;
     flex-direction: row !important;
     flex-wrap: nowrap !important;
-    justify-content: center;
+    justify-content: space-between;
     display: flex !important;
     width: 100%;
+    padding: 0 10px;
   }
 
   .btn-primary,
@@ -450,13 +451,15 @@
     font-size: 0.75em;
   }
 
-  /* Keep buttons in horizontal row even on small screens */
+  /* Keep buttons in horizontal row even on small screens - Back left, Download right */
   .action-buttons {
     flex-direction: row !important;
     flex-wrap: nowrap !important;
     width: 100%;
     gap: 6px;
     display: flex !important;
+    justify-content: space-between;
+    padding: 0 5px;
   }
 
   .btn-primary,
