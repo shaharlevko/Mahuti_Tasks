@@ -176,28 +176,55 @@ function PrintView({ tasks, staff, assignments, weekStartDate, showDays, onClose
     setIsGeneratingPDF(true);
     try {
       const content = printContentRef.current;
+      const wrapper = content.parentElement;
+
+      // Save original styles
+      const originalContentWidth = content.style.width;
+      const originalContentMaxWidth = content.style.maxWidth;
+      const originalContentFontSize = content.style.fontSize;
+      const originalContentPadding = content.style.padding;
+      const originalWrapperMaxHeight = wrapper?.style.maxHeight;
+      const originalWrapperOverflow = wrapper?.style.overflow;
 
       // Force desktop layout for PDF generation on all devices
-      const originalWidth = content.style.width;
-      const originalMaxWidth = content.style.maxWidth;
-      const originalFontSize = content.style.fontSize;
-
-      // Apply desktop print layout temporarily
-      content.style.width = '277mm'; // A4 landscape minus margins
+      content.style.width = '277mm';
       content.style.maxWidth = '277mm';
-      content.style.fontSize = '16px'; // Base font size for desktop
+      content.style.fontSize = '16px';
+      content.style.padding = '3mm 5mm';
+
+      // Ensure wrapper doesn't constrain
+      if (wrapper) {
+        wrapper.style.maxHeight = 'none';
+        wrapper.style.overflow = 'visible';
+      }
+
+      // Get table and ensure it uses fixed layout
+      const table = content.querySelector('.print-table');
+      const originalTableFontSize = table?.style.fontSize;
+      if (table) {
+        table.style.tableLayout = 'fixed';
+        table.style.width = '100%';
+        table.style.fontSize = '1rem'; // Force desktop font size
+      }
+
+      // Reset all table cells to desktop sizes
+      const allCells = content.querySelectorAll('.print-table th, .print-table td');
+      const originalCellStyles = Array.from(allCells).map(cell => ({
+        padding: cell.style.padding,
+        fontSize: cell.style.fontSize
+      }));
 
       // Add temporary class to force print styles
       content.classList.add('force-print-layout');
 
       // Wait for layout to settle
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 150));
 
       // Apply dynamic font sizing for desktop layout
       adjustFontSizes();
 
       // Wait for font adjustments to complete
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       // Capture the content as canvas with higher quality
       const canvas = await html2canvas(content, {
@@ -206,13 +233,33 @@ function PrintView({ tasks, staff, assignments, weekStartDate, showDays, onClose
         logging: false,
         backgroundColor: '#ffffff',
         width: 1045, // 277mm in pixels at 96dpi
-        windowWidth: 1045
+        windowWidth: 1045,
+        height: content.scrollHeight
       });
 
       // Restore original styles
-      content.style.width = originalWidth;
-      content.style.maxWidth = originalMaxWidth;
-      content.style.fontSize = originalFontSize;
+      content.style.width = originalContentWidth;
+      content.style.maxWidth = originalContentMaxWidth;
+      content.style.fontSize = originalContentFontSize;
+      content.style.padding = originalContentPadding;
+
+      if (wrapper) {
+        wrapper.style.maxHeight = originalWrapperMaxHeight;
+        wrapper.style.overflow = originalWrapperOverflow;
+      }
+
+      if (table) {
+        table.style.fontSize = originalTableFontSize;
+      }
+
+      // Restore cell styles
+      allCells.forEach((cell, index) => {
+        if (originalCellStyles[index]) {
+          cell.style.padding = originalCellStyles[index].padding;
+          cell.style.fontSize = originalCellStyles[index].fontSize;
+        }
+      });
+
       content.classList.remove('force-print-layout');
 
       // Create PDF in landscape A4 format
