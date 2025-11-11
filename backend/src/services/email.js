@@ -15,11 +15,14 @@ function getTransporter() {
     return null;
   }
 
+  // Remove spaces from app password (common issue)
+  const appPassword = process.env.GMAIL_APP_PASSWORD.replace(/\s/g, '');
+
   transporter = nodemailer.createTransporter({
     service: 'gmail',
     auth: {
       user: process.env.GMAIL_USER,
-      pass: process.env.GMAIL_APP_PASSWORD
+      pass: appPassword
     }
   });
 
