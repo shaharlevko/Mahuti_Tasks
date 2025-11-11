@@ -49,15 +49,15 @@
 }
 
 .user-avatar-mobile {
-  width: 35px;
-  height: 35px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  border: 2.5px solid;
+  border: 3px solid;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: bold;
-  font-size: 13px;
+  font-size: 16px;
   background: white;
   color: #000;
   position: relative;
