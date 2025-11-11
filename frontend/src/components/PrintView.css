@@ -15,9 +15,9 @@
 .action-buttons {
   display: flex;
   gap: 15px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: center;
-  align-items: flex-start;
+  align-items: center;
 }
 
 .btn-primary,
@@ -31,6 +31,8 @@
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .btn-primary {
@@ -343,7 +345,7 @@
 
   /* Keep buttons in single horizontal row on mobile */
   .action-buttons {
-    gap: 10px;
+    gap: 8px;
     flex-direction: row;
     flex-wrap: nowrap;
     justify-content: center;
@@ -351,11 +353,11 @@
 
   .btn-primary,
   .btn-secondary {
-    padding: 7px 11px;
+    padding: 7px 14px;
     font-size: 0.67em;
     min-height: 44px;
-    flex: 1;
-    max-width: 150px;
+    flex: 0 0 auto;
+    max-width: none;
   }
 
   /* Make print content fill mobile width - preserving A4 horizontal aspect ratio */
@@ -450,13 +452,13 @@
     flex-direction: row;
     flex-wrap: nowrap;
     width: 100%;
-    gap: 8px;
+    gap: 6px;
   }
 
   .btn-primary,
   .btn-secondary {
-    flex: 1;
-    padding: 7px 8px;
+    flex: 0 0 auto;
+    padding: 7px 10px;
     font-size: 0.6em;
     max-width: none;
   }

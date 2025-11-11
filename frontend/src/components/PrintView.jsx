@@ -96,10 +96,13 @@ function PrintView({ tasks, staff, assignments, weekStartDate, showDays, onClose
         const touch1 = e.touches[0];
         const touch2 = e.touches[1];
         const currentDistance = getDistance(touch1, touch2);
-        const scale = (currentDistance / initialDistance) * initialZoom;
 
-        // Limit zoom between 0.5x and 3x
-        const newZoom = Math.min(Math.max(scale, 0.5), 3);
+        // Calculate scale change with damping for smoother, less sensitive zoom
+        const rawScale = currentDistance / initialDistance;
+        const dampedScale = initialZoom + (rawScale - 1) * initialZoom * 0.5; // 50% damping
+
+        // Limit zoom between 0.7x and 1.8x for more controlled zooming
+        const newZoom = Math.min(Math.max(dampedScale, 0.7), 1.8);
         setZoom(newZoom);
 
         // Adjust pan to zoom toward pinch center
@@ -108,8 +111,8 @@ function PrintView({ tasks, staff, assignments, weekStartDate, showDays, onClose
         const deltaY = currentCenter.y - lastTouchCenter.y;
 
         setPan(prev => ({
-          x: prev.x + deltaX * 0.5,
-          y: prev.y + deltaY * 0.5
+          x: prev.x + deltaX * 0.3,
+          y: prev.y + deltaY * 0.3
         }));
 
         lastTouchCenter = currentCenter;
@@ -120,9 +123,10 @@ function PrintView({ tasks, staff, assignments, weekStartDate, showDays, onClose
         const deltaX = touch.clientX - lastTouchCenter.x;
         const deltaY = touch.clientY - lastTouchCenter.y;
 
+        // Smoother panning with constraints
         setPan(prev => ({
-          x: prev.x + deltaX,
-          y: prev.y + deltaY
+          x: prev.x + deltaX * 0.8,
+          y: prev.y + deltaY * 0.8
         }));
 
         lastTouchCenter = { x: touch.clientX, y: touch.clientY };
