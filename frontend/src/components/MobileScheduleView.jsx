@@ -127,7 +127,7 @@ function MobileScheduleView({
       <header className="mobile-header" style={{
         paddingTop: scrollY > 50 ? '5px' : '10px',
         paddingBottom: scrollY > 50 ? '5px' : '10px',
-        transform: `translateY(-${Math.min(scrollY * 1.0, 65)}px)`,
+        transform: `translateY(-${Math.min(scrollY * 0.15, 12)}px)`,
         transition: 'padding 0.3s, transform 0.3s'
       }}>
         <div className="mobile-header-top">
