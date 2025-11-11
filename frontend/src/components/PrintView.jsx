@@ -11,27 +11,7 @@ function PrintView({ tasks, staff, assignments, weekStartDate, showDays, onClose
   const printContentRef = useRef(null);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
-  // Pinch-to-zoom state
-  const [zoom, setZoom] = useState(1);
-  const [pan, setPan] = useState({ x: 0, y: 0 });
-  const [isZooming, setIsZooming] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-
   const DAYS = showDays === 6 ? DAYS_6 : DAYS_5;
-
-  // Detect mobile device
-  useEffect(() => {
-    const checkMobile = () => {
-      const mobile = window.innerWidth <= 768;
-      setIsMobile(mobile);
-      // Start at zoom 1 - content will be sized via CSS to fit mobile width
-      setZoom(1);
-    };
-
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
 
   // Calculate week end date
   const weekStart = new Date(weekStartDate);
@@ -47,122 +27,6 @@ function PrintView({ tasks, staff, assignments, weekStartDate, showDays, onClose
       document.body.classList.remove('print-mode');
     };
   }, []);
-
-  // Pinch-to-zoom touch handlers
-  useEffect(() => {
-    const element = printContentRef.current;
-    if (!element) return;
-
-    let initialDistance = 0;
-    let initialZoom = 1;
-    let initialPan = { x: 0, y: 0 };
-    let lastTouchCenter = { x: 0, y: 0 };
-
-    const getDistance = (touch1, touch2) => {
-      const dx = touch1.clientX - touch2.clientX;
-      const dy = touch1.clientY - touch2.clientY;
-      return Math.sqrt(dx * dx + dy * dy);
-    };
-
-    const getTouchCenter = (touch1, touch2) => {
-      return {
-        x: (touch1.clientX + touch2.clientX) / 2,
-        y: (touch1.clientY + touch2.clientY) / 2
-      };
-    };
-
-    const handleTouchStart = (e) => {
-      if (e.touches.length === 2) {
-        // Two fingers - pinch zoom
-        e.preventDefault();
-        setIsZooming(true);
-        const touch1 = e.touches[0];
-        const touch2 = e.touches[1];
-        initialDistance = getDistance(touch1, touch2);
-        initialZoom = zoom;
-        lastTouchCenter = getTouchCenter(touch1, touch2);
-      } else if (e.touches.length === 1 && zoom !== 1) {
-        // One finger + zoomed - pan
-        const touch = e.touches[0];
-        initialPan = { ...pan };
-        lastTouchCenter = { x: touch.clientX, y: touch.clientY };
-      }
-    };
-
-    const handleTouchMove = (e) => {
-      if (e.touches.length === 2) {
-        // Pinch zoom
-        e.preventDefault();
-        const touch1 = e.touches[0];
-        const touch2 = e.touches[1];
-        const currentDistance = getDistance(touch1, touch2);
-
-        // Calculate scale change with damping for smoother, less sensitive zoom
-        const rawScale = currentDistance / initialDistance;
-        const dampedScale = initialZoom + (rawScale - 1) * initialZoom * 0.5; // 50% damping
-
-        // Limit zoom between 0.7x and 1.8x for more controlled zooming
-        const newZoom = Math.min(Math.max(dampedScale, 0.7), 1.8);
-        setZoom(newZoom);
-
-        // Adjust pan to zoom toward pinch center
-        const currentCenter = getTouchCenter(touch1, touch2);
-        const deltaX = currentCenter.x - lastTouchCenter.x;
-        const deltaY = currentCenter.y - lastTouchCenter.y;
-
-        setPan(prev => ({
-          x: prev.x + deltaX * 0.3,
-          y: prev.y + deltaY * 0.3
-        }));
-
-        lastTouchCenter = currentCenter;
-      } else if (e.touches.length === 1 && zoom !== 1) {
-        // Pan when zoomed (allow panning at any zoom level)
-        e.preventDefault();
-        const touch = e.touches[0];
-        const deltaX = touch.clientX - lastTouchCenter.x;
-        const deltaY = touch.clientY - lastTouchCenter.y;
-
-        // Smoother panning with constraints
-        setPan(prev => ({
-          x: prev.x + deltaX * 0.8,
-          y: prev.y + deltaY * 0.8
-        }));
-
-        lastTouchCenter = { x: touch.clientX, y: touch.clientY };
-      }
-    };
-
-    const handleTouchEnd = (e) => {
-      if (e.touches.length < 2) {
-        setIsZooming(false);
-      }
-
-      // Reset zoom on double-tap
-      if (e.touches.length === 0 && zoom !== 1) {
-        const now = Date.now();
-        const timeSinceLastTap = now - (element.lastTapTime || 0);
-
-        if (timeSinceLastTap < 300 && timeSinceLastTap > 0) {
-          // Double tap detected - reset zoom
-          setZoom(1);
-          setPan({ x: 0, y: 0 });
-        }
-
-        element.lastTapTime = now;
-      }
-    };
-
-    element.addEventListener('touchstart', handleTouchStart, { passive: false });
-    element.addEventListener('touchmove', handleTouchMove, { passive: false });
-    element.addEventListener('touchend', handleTouchEnd, { passive: false });
-
-    return () => {
-      element.removeEventListener('touchstart', handleTouchStart);
-      element.removeEventListener('touchmove', handleTouchMove);
-      element.removeEventListener('touchend', handleTouchEnd);
-    };
-  }, [zoom, pan]);
 
   const handlePrint = () => {
     window.print();
@@ -245,15 +109,7 @@ function PrintView({ tasks, staff, assignments, weekStartDate, showDays, onClose
       </div>
 
       <div className="print-content-wrapper">
-        <div
-          className="print-content"
-          ref={printContentRef}
-          style={{
-            transform: `scale(${zoom}) translate(${pan.x / zoom}px, ${pan.y / zoom}px)`,
-            transformOrigin: 'top center',
-            transition: isZooming ? 'none' : 'transform 0.2s ease-out'
-          }}
-        >
+        <div className="print-content" ref={printContentRef}>
           {/* Decorative header with flowers */}
           <div className="print-header">
             <div className="title-container">
