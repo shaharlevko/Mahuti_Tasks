@@ -162,16 +162,14 @@ function UserManager() {
 
   return (
     <div className="user-manager">
-      <header className="user-manager-header">
-        <div className="header-content">
-          <div className="header-left">
-            <h1>User Management</h1>
-          </div>
-          <button className="btn-back" onClick={() => navigate('/')}>
-            ← Back to Schedule
-          </button>
-        </div>
-      </header>
+      <div className="logo-back-container">
+        <img
+          src="/mahuti-logo.svg"
+          alt="Mahuti"
+          className="logo-back-btn"
+          onClick={() => navigate('/')}
+        />
+      </div>
 
       <div className="user-manager-content">
         {/* Users List */}

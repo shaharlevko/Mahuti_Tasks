@@ -90,13 +90,18 @@ function PrintView({ tasks, staff, assignments, weekStartDate, showDays, onClose
 
   return (
     <div className="print-view">
+      <div className="logo-back-container no-print">
+        <img
+          src="/mahuti-logo.svg"
+          alt="Mahuti"
+          className="logo-back-btn"
+          onClick={onClose}
+        />
+      </div>
       <div className="print-controls no-print">
         <div className="action-buttons">
           <button onClick={handlePrint} className="btn-primary btn-print">
             🖨️ Print
-          </button>
-          <button onClick={onClose} className="btn-secondary">
-            ← Back to edit
           </button>
           <button
             onClick={handleDownloadPDF}

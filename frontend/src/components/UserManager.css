@@ -4,47 +4,26 @@
   font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
-.user-manager-header {
-  background-color: white;
-  padding: 20px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.user-manager-header .header-content {
-  max-width: 1400px;
-  margin: 0 auto;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.user-manager-header .header-left {
+.logo-back-container {
+  padding: 15px 20px;
+  background: linear-gradient(120deg, rgba(254, 166, 102, 0.6), rgba(253, 106, 79, 0.6), rgba(254, 163, 198, 0.6), rgba(137, 137, 182, 0.6), rgba(138, 215, 235, 0.6), rgba(138, 215, 102, 0.6), rgba(255, 217, 102, 0.6));
   display: flex;
   align-items: center;
-  gap: 10px;
 }
 
-.user-manager-header h1 {
-  margin: 0;
-  color: #FF6B9D;
-  font-size: 28px;
-}
-
-
-.btn-back {
-  padding: 10px 20px;
-  background-color: #B4D7E8;
-  border: none;
-  border-radius: 8px;
+.logo-back-btn {
+  height: 55px;
+  width: auto;
   cursor: pointer;
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: bold;
-  color: #333;
+  transition: transform 0.2s;
 }
 
-.btn-back:hover {
-  background-color: #A8D8EA;
+.logo-back-btn:hover {
+  transform: scale(1.05);
+}
+
+.logo-back-btn:active {
+  transform: scale(0.98);
 }
 
 .user-manager-content {
