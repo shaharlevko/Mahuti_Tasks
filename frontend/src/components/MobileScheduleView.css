@@ -865,3 +865,138 @@
   height: 55px;
   width: auto;
 }
+
+/* Emoji Picker Mobile Styles */
+.emoji-input-wrapper-mobile {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.emoji-input-mobile {
+  flex: 1;
+  padding: 12px;
+  border: 2px solid #E0E0E0;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 1em;
+  margin-bottom: 0 !important;
+  transition: border-color 0.2s;
+}
+
+.emoji-input-mobile:focus {
+  outline: none;
+  border-color: #B4D7E8;
+}
+
+.emoji-picker-btn-mobile {
+  width: 50px;
+  height: 50px;
+  border: 2px solid #E0E0E0;
+  border-radius: 8px;
+  background: white;
+  font-size: 1.5em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.emoji-picker-btn-mobile:active {
+  transform: scale(0.95);
+  background: #F8F8F8;
+}
+
+.emoji-picker-mobile {
+  background: white;
+  border: 2px solid #E0E0E0;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 15px;
+  max-height: 350px;
+  overflow-y: auto;
+}
+
+.emoji-categories-mobile {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.emoji-categories-mobile::-webkit-scrollbar {
+  height: 4px;
+}
+
+.emoji-categories-mobile::-webkit-scrollbar-track {
+  background: #F0F0F0;
+  border-radius: 2px;
+}
+
+.emoji-categories-mobile::-webkit-scrollbar-thumb {
+  background: #B4D7E8;
+  border-radius: 2px;
+}
+
+.emoji-category-btn-mobile {
+  padding: 8px 14px;
+  border: 2px solid #E0E0E0;
+  border-radius: 8px;
+  background: white;
+  font-family: inherit;
+  font-size: 0.85em;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  color: #666;
+  transition: all 0.2s;
+}
+
+.emoji-category-btn-mobile.active {
+  background: linear-gradient(135deg, #C7ECDE 0%, #B4E7CE 100%);
+  border-color: #5FB878;
+  color: #2D5F4B;
+}
+
+.emoji-category-btn-mobile:active {
+  transform: scale(0.95);
+}
+
+.emoji-grid-mobile {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+}
+
+.emoji-option-mobile {
+  width: 100%;
+  aspect-ratio: 1;
+  border: 2px solid #F0F0F0;
+  border-radius: 8px;
+  background: white;
+  font-size: 1.8em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.emoji-option-mobile:active {
+  transform: scale(0.9);
+  background: #F8F8F8;
+  border-color: #B4D7E8;
+}
+
+@media (max-width: 360px) {
+  .emoji-grid-mobile {
+    grid-template-columns: repeat(5, 1fr);
+  }
+
+  .emoji-option-mobile {
+    font-size: 1.5em;
+  }
+}

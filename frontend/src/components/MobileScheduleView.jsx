@@ -9,6 +9,57 @@ import './MobileScheduleView.css';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
+const EMOJI_CATEGORIES = {
+  'Food & Drinks': [
+    '🍎', '🍌', '🍇', '🍊', '🍓', '🍒', '🍑', '🥭', '🍍', '🥥',
+    '🥕', '🥦', '🥬', '🥒', '🌶️', '🫑', '🌽', '🥔', '🍅', '🥗',
+    '🍞', '🥖', '🥨', '🧀', '🥚', '🍳', '🥞', '🧇', '🥓', '🍖',
+    '🍕', '🍔', '🌭', '🥪', '🌮', '🌯', '🫔', '🥙', '🧆', '🍝',
+    '🍪', '🍰', '🧁', '🍩', '🍦', '🍨', '🧋', '🍫', '🍬', '🍭',
+    '🥛', '☕', '🧃', '🥤', '🧉', '🍵', '🧊', '💧', '🍾', '🥂'
+  ],
+  'Activities': [
+    '🎨', '🎭', '🎪', '🎬', '🎤', '🎧', '🎼', '🎹', '🎸', '🥁',
+    '🎮', '🎲', '🎯', '🎳', '🎱', '🏓', '🏸', '🥊', '🎣', '🛹',
+    '🧩', '🪀', '🎪', '🎢', '🎡', '🎠', '⚽', '🏀', '🏈', '⚾',
+    '🎾', '🏐', '🏉', '🥏', '🎿', '⛸️', '🛷', '🏂', '🏋️', '🤸'
+  ],
+  'School & Office': [
+    '📚', '📖', '📝', '✏️', '✒️', '🖊️', '🖍️', '📌', '📎', '✂️',
+    '📏', '📐', '📋', '📊', '📈', '📉', '🗂️', '📁', '📂', '🗃️',
+    '🖇️', '📆', '📅', '🗓️', '📇', '🗒️', '🗳️', '🖨️', '🖥️', '💻',
+    '⌨️', '🖱️', '🖲️', '💾', '💿', '📱', '📞', '☎️', '📠', '🔍'
+  ],
+  'Celebrations': [
+    '🎁', '🎀', '🎈', '🎉', '🎊', '🎂', '🧨', '✨', '🎆', '🎇',
+    '🏆', '🥇', '🥈', '🥉', '🏅', '🎖️', '👑', '💎', '💍', '👍',
+    '👏', '🙌', '🤝', '💪', '🦾', '🎯', '🌟', '⭐', '💫', '🔥'
+  ],
+  'Nature': [
+    '🌳', '🌲', '🌴', '🌵', '🌾', '🌿', '🍀', '🍁', '🍂', '🍃',
+    '🌻', '🌺', '🌸', '🌼', '🌷', '🌹', '🥀', '🏵️', '💐', '🌱',
+    '🪴', '🌾', '🪺', '🍄', '🌰', '🐚', '🪨', '⛰️', '🏔️', '🗻',
+    '🌋', '🏕️', '⛺', '🏞️', '🌅', '🌄', '🌠', '🌌', '🌉', '🌁'
+  ],
+  'Cleaning & Home': [
+    '🧹', '🧺', '🧼', '🧽', '🧴', '🧻', '🛁', '🚿', '🚽', '🪠',
+    '🧖', '💆', '💇', '🏠', '🏡', '🏘️', '🛋️', '🪑', '🛏️', '🚪',
+    '🪟', '🧰', '🔨', '🪛', '🔧', '🪚', '⚒️', '🛠️', '⚙️', '🧲'
+  ],
+  'Smileys': [
+    '😊', '😄', '😁', '😃', '😀', '😍', '🥰', '😘', '😗', '😙',
+    '😚', '🤗', '🤩', '😎', '🤓', '🧐', '🤔', '🤨', '😐', '😑',
+    '😏', '😌', '😔', '😪', '🤤', '😴', '😷', '🤒', '🤕', '🤢',
+    '🤮', '🤧', '🥵', '🥶', '😇', '🥳', '🥸', '😈', '👿', '💀'
+  ],
+  'Animals': [
+    '🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯',
+    '🦁', '🐮', '🐷', '🐸', '🐵', '🙈', '🙉', '🙊', '🐔', '🐧',
+    '🐦', '🐤', '🐣', '🦆', '🦅', '🦉', '🦇', '🐺', '🐗', '🐴',
+    '🦄', '🐝', '🐛', '🦋', '🐌', '🐞', '🐜', '🦟', '🦗', '🕷️'
+  ]
+};
+
 function MobileScheduleView({
   tasks,
   staff,
@@ -495,6 +546,8 @@ function TaskManagerModal({ tasks, onAdd, onUpdate, onDelete, onClose }) {
   const [taskIcon, setTaskIcon] = useState('');
   const [taskCategory, setTaskCategory] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [selectedEmojiCategory, setSelectedEmojiCategory] = useState('Food & Drinks');
 
   const SATURATED_COLORS = [
     '#FF6B58', '#E74B9C', '#9370DB', '#4A90E2', '#00BCD4', '#20B2AA',
@@ -530,6 +583,8 @@ function TaskManagerModal({ tasks, onAdd, onUpdate, onDelete, onClose }) {
     setTaskCategory('');
     setEditingTask(null);
     setShowForm(false);
+    setShowEmojiPicker(false);
+    setSelectedEmojiCategory('Food & Drinks');
   };
 
   const handleEdit = (t) => {
@@ -544,6 +599,15 @@ function TaskManagerModal({ tasks, onAdd, onUpdate, onDelete, onClose }) {
     if (window.confirm('Delete this task?')) {
       onDelete(id);
     }
+  };
+
+  const handleEmojiSelect = (emoji) => {
+    setTaskIcon(emoji);
+    setShowEmojiPicker(false);
+  };
+
+  const getFilteredEmojis = () => {
+    return EMOJI_CATEGORIES[selectedEmojiCategory] || [];
   };
 
   return (
@@ -563,13 +627,24 @@ function TaskManagerModal({ tasks, onAdd, onUpdate, onDelete, onClose }) {
 
           {showForm && (
             <form className="mobile-form" onSubmit={handleSubmit}>
-              <input
-                type="text"
-                placeholder="Emoji (e.g., 🍎)"
-                value={taskIcon}
-                onChange={(e) => setTaskIcon(e.target.value)}
-                required
-              />
+              <div className="emoji-input-wrapper-mobile">
+                <input
+                  type="text"
+                  placeholder="Emoji (e.g., 🍎)"
+                  value={taskIcon}
+                  onChange={(e) => setTaskIcon(e.target.value)}
+                  className="emoji-input-mobile"
+                  required
+                />
+                <button
+                  type="button"
+                  className="emoji-picker-btn-mobile"
+                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                  title="Choose emoji"
+                >
+                  😊
+                </button>
+              </div>
               <input
                 type="text"
                 placeholder="Task name"
@@ -583,6 +658,36 @@ function TaskManagerModal({ tasks, onAdd, onUpdate, onDelete, onClose }) {
                 value={taskCategory}
                 onChange={(e) => setTaskCategory(e.target.value)}
               />
+
+              {showEmojiPicker && (
+                <div className="emoji-picker-mobile">
+                  <div className="emoji-categories-mobile">
+                    {Object.keys(EMOJI_CATEGORIES).map((category) => (
+                      <button
+                        key={category}
+                        type="button"
+                        className={`emoji-category-btn-mobile ${selectedEmojiCategory === category ? 'active' : ''}`}
+                        onClick={() => setSelectedEmojiCategory(category)}
+                      >
+                        {category}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="emoji-grid-mobile">
+                    {getFilteredEmojis().map((emoji, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        className="emoji-option-mobile"
+                        onClick={() => handleEmojiSelect(emoji)}
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="form-actions-mobile">
                 <button type="submit" className="submit-btn-mobile">
                   {editingTask ? 'Update' : 'Add'}
