@@ -212,15 +212,6 @@ function MobileScheduleView({
             <button onClick={() => { setShowTaskManager(true); setShowMenu(false); }}>
               📋 Manage Tasks
             </button>
-            <button onClick={() => { onShowPrintView(); setShowMenu(false); }}>
-              🖨️ Print Schedule
-            </button>
-            <button
-              onClick={() => { handleClearWeek(); setShowMenu(false); }}
-              className="danger-btn"
-            >
-              🗑️ Clear Week
-            </button>
             {isAdmin() && (
               <button onClick={handleUserManagement}>
                 👤 Users
@@ -279,6 +270,24 @@ function MobileScheduleView({
             </div>
           );
         })}
+      </div>
+
+      {/* Bottom Action Bar */}
+      <div className="mobile-bottom-bar">
+        <button
+          className="bottom-action-btn view-schedule-btn"
+          onClick={() => onShowPrintView()}
+        >
+          <span className="btn-icon">🖨️</span>
+          <span className="btn-text">View Schedule</span>
+        </button>
+        <button
+          className="bottom-action-btn clear-week-btn"
+          onClick={handleClearWeek}
+        >
+          <span className="btn-icon">🗑️</span>
+          <span className="btn-text">Clear Week</span>
+        </button>
       </div>
 
       {/* Staff Selector Bottom Sheet */}
