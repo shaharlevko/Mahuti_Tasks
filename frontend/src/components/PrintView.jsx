@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import './PrintView.css';
+import { useDialog } from '../hooks/useDialog';
+import ConfirmDialog from './ConfirmDialog';
 
 const DAYS_5 = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
 const DAYS_6 = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
@@ -10,6 +12,7 @@ const DAY_COLORS = ['#8B4513', '#4169E1', '#2F4F4F', '#FF8C00', '#8B4513', '#DC1
 function PrintView({ tasks, staff, assignments, weekStartDate, showDays, onClose, scheduleId }) {
   const printContentRef = useRef(null);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const { dialogState, showAlert } = useDialog();
 
   const DAYS = showDays === 6 ? DAYS_6 : DAYS_5;
 
@@ -81,7 +84,11 @@ function PrintView({ tasks, staff, assignments, weekStartDate, showDays, onClose
       pdf.save(filename);
     } catch (error) {
       console.error('Error generating PDF:', error);
-      alert('Failed to generate PDF. Please try again.');
+      await showAlert({
+        message: 'Failed to generate PDF. Please try again.',
+        title: 'Error',
+        icon: '❌'
+      });
     } finally {
       setIsGeneratingPDF(false);
     }
@@ -171,6 +178,8 @@ function PrintView({ tasks, staff, assignments, weekStartDate, showDays, onClose
           </div>
         </div>
       </div>
+
+      <ConfirmDialog {...dialogState} />
     </div>
   );
 }
