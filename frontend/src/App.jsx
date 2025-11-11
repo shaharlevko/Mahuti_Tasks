@@ -603,6 +603,21 @@ function MainApp() {
     setShowConfirmDialog(true);
   };
 
+  const handleClearWeekDirect = async () => {
+    // For mobile - direct clear without desktop dialog
+    if (!currentSchedule) return;
+
+    try {
+      await axios.delete(`${API_URL}/schedules/${currentSchedule.id}/assignments`);
+      const newAssignments = {};
+      saveToHistory(newAssignments);
+      setAssignments(newAssignments);
+    } catch (error) {
+      console.error('Error clearing week:', error);
+      alert('Failed to clear week. Please try again.');
+    }
+  };
+
   const handleConfirmClear = async () => {
     setShowConfirmDialog(false);
 
@@ -654,7 +669,7 @@ function MainApp() {
         onNavigateWeek={navigateWeek}
         onTaskDrop={handleTaskDrop}
         onRemoveAssignment={handleRemoveAssignment}
-        onClearWeek={handleClearWeek}
+        onClearWeek={handleClearWeekDirect}
         onUndo={handleUndo}
         onRedo={handleRedo}
         canUndo={canUndo}
