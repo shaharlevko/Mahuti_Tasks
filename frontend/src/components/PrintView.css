@@ -20,63 +20,12 @@
   align-items: flex-start;
 }
 
-.share-dropdown-container {
-  position: relative;
-  display: inline-block;
-}
-
-.share-dropdown {
-  position: absolute;
-  top: calc(100% + 5px);
-  left: 0;
-  background: white;
-  border-radius: 15px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  overflow: hidden;
-  z-index: 1000;
-  min-width: 180px;
-  animation: slideDown 0.2s ease-out;
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.share-option {
-  display: block;
-  width: 100%;
-  padding: 12px 20px;
-  border: none;
-  background: white;
-  text-align: left;
-  font-size: 1em;
-  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.share-option:hover {
-  background-color: #F0F0F0;
-}
-
-.share-option:not(:last-child) {
-  border-bottom: 1px solid #E0E0E0;
-}
-
 .btn-primary,
 .btn-secondary {
-  padding: 12px 30px;
+  padding: 8px 21px;
   border: none;
-  border-radius: 25px;
-  font-size: 1.1em;
+  border-radius: 18px;
+  font-size: 0.77em;
   font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-weight: bold;
   cursor: pointer;
@@ -107,6 +56,12 @@
   transform: none;
 }
 
+.print-content-wrapper {
+  width: 100%;
+  overflow: hidden; /* Clip zoomed content */
+  position: relative;
+}
+
 .print-content {
   background: white;
   max-width: 1200px;
@@ -114,6 +69,8 @@
   padding: 40px;
   border-radius: 10px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  touch-action: none; /* Enable custom pinch-to-zoom on mobile */
+  user-select: none; /* Prevent text selection during pinch */
 }
 
 /* Print header with flowers */
@@ -279,12 +236,18 @@
     display: none !important;
   }
 
+  .print-content-wrapper {
+    overflow: visible !important;
+    min-height: auto !important;
+  }
+
   .print-content {
     max-width: 100%;
     padding: 15px;
     box-shadow: none;
     border-radius: 0;
     width: 100%;
+    transform: none !important; /* Reset any zoom transforms for print */
   }
 
   .print-title {
@@ -356,139 +319,182 @@
 /* Mobile responsive styles */
 @media (max-width: 768px) {
   .print-view {
-    padding: 10px;
+    padding: 0;
+    overflow-x: hidden; /* Prevent horizontal scroll */
+    overflow-y: auto; /* Allow vertical scroll */
+    width: 100vw;
+  }
+
+  .print-content-wrapper {
+    width: 100vw;
+    overflow: hidden; /* Clip content during zoom */
+    min-height: 100vh;
   }
 
   .print-controls {
     margin-bottom: 15px;
+    padding: 10px;
   }
 
+  /* Hide Print button on mobile */
+  .btn-print {
+    display: none;
+  }
+
+  /* Keep buttons in single horizontal row on mobile */
   .action-buttons {
     gap: 10px;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: center;
   }
 
   .btn-primary,
   .btn-secondary {
-    padding: 10px 20px;
-    font-size: 1em;
+    padding: 7px 11px;
+    font-size: 0.67em;
     min-height: 44px;
-    min-width: 120px;
+    flex: 1;
+    max-width: 150px;
   }
 
+  /* Make print content fill mobile width - preserving A4 horizontal aspect ratio */
   .print-content {
-    padding: 20px 15px;
+    max-width: 100vw;
+    width: 100vw;
+    padding: 15px 10px;
+    margin: 0;
+    box-sizing: border-box;
+    border-radius: 0;
+    box-shadow: none;
+    transform-origin: top center;
   }
 
   .print-title {
-    font-size: 1.5em;
+    font-size: 1.3em;
   }
 
   .week-dates {
-    font-size: 0.9em;
-  }
-
-
-  .print-table-container {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .print-table {
     font-size: 0.85em;
   }
 
+  /* Ensure table fits within container */
+  .print-table-container {
+    overflow: visible;
+    width: 100%;
+  }
+
+  .print-table {
+    font-size: 0.55em; /* Smaller to fit mobile width */
+    width: 100%;
+    border: 2px solid #B4E7CE; /* Thinner border */
+  }
+
   .print-table th {
-    padding: 12px 8px;
-    font-size: 1.2em;
+    padding: 8px 4px;
+    font-size: 1.4em;
+    border-right: 2px solid #B4E7CE;
+    border-bottom: 2px solid #B4E7CE;
   }
 
   .print-table td {
-    padding: 12px 8px;
+    padding: 8px 4px;
+    border-right: 1px solid #F0E8DC;
+    border-bottom: 1px solid #F0E8DC;
+    min-height: 50px;
   }
 
   .print-table .task-column {
-    width: 120px;
-    font-size: 1.2em;
+    width: 90px;
+    font-size: 1.4em;
+    padding-left: 8px;
+  }
+
+  .print-table .task-name-cell {
+    gap: 8px;
   }
 
   .print-table .task-icon {
-    font-size: 1.5em;
+    font-size: 1.8em;
   }
 
   .print-table .task-name {
-    font-size: 1.2em;
+    font-size: 1.4em;
   }
 
   .staff-name-print {
-    font-size: 1.2em;
+    font-size: 1.4em;
   }
 
   .footer-decorations {
     font-size: 1.5em;
     gap: 10px;
   }
-
-  .share-dropdown {
-    left: auto;
-    right: 0;
-  }
-
-  .share-option {
-    min-height: 44px;
-    display: flex;
-    align-items: center;
-  }
 }
 
 @media (max-width: 480px) {
+  .print-content {
+    padding: 10px 5px;
+  }
+
   .print-title {
-    font-size: 1.2em;
+    font-size: 1.1em;
   }
 
   .week-dates {
-    font-size: 0.8em;
-  }
-
-
-  .action-buttons {
-    flex-direction: column;
-    width: 100%;
-  }
-
-  .btn-primary,
-  .btn-secondary,
-  .share-dropdown-container {
-    width: 100%;
-  }
-
-  .print-table {
     font-size: 0.75em;
   }
 
+  /* Keep buttons in horizontal row even on small screens */
+  .action-buttons {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    flex: 1;
+    padding: 7px 8px;
+    font-size: 0.6em;
+    max-width: none;
+  }
+
+  .print-table {
+    font-size: 0.45em; /* Even smaller for very small screens */
+  }
+
   .print-table th {
-    padding: 10px 6px;
-    font-size: 1em;
+    padding: 6px 3px;
+    font-size: 1.4em;
   }
 
   .print-table td {
-    padding: 10px 6px;
+    padding: 6px 3px;
+    min-height: 40px;
   }
 
   .print-table .task-column {
-    width: 100px;
-    font-size: 1em;
+    width: 80px;
+    font-size: 1.4em;
+    padding-left: 5px;
+  }
+
+  .print-table .task-name-cell {
+    gap: 6px;
   }
 
   .print-table .task-icon {
-    font-size: 1.2em;
+    font-size: 1.6em;
   }
 
   .print-table .task-name {
-    font-size: 1em;
+    font-size: 1.4em;
   }
 
   .staff-name-print {
-    font-size: 1em;
+    font-size: 1.4em;
   }
 
   .footer-decorations {
