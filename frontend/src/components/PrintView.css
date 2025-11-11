@@ -821,58 +821,62 @@
   }
 
   .print-table th {
-    padding: 8px 3px;
-    font-size: 1.6em;
+    padding: 6px 2px;
+    font-size: 1.2em;
     border-right: 2px solid #B4E7CE;
     border-bottom: 2px solid #B4E7CE;
     word-break: break-word;
-    hyphens: auto;
-    line-height: 1.2;
+    line-height: 1.1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: normal;
   }
 
   .print-table td {
-    padding: 8px 3px;
+    padding: 6px 2px;
     border-right: 1px solid #F0E8DC;
     border-bottom: 1px solid #F0E8DC;
-    min-height: 40px;
+    min-height: 35px;
     vertical-align: middle;
+    overflow: hidden;
   }
 
   .print-table .task-column {
-    width: 28%;
-    font-size: 1.4em;
-    padding-left: 6px;
-    padding-right: 4px;
+    width: 30%;
+    font-size: 1.2em;
+    padding-left: 5px;
+    padding-right: 3px;
   }
 
   .print-table .task-name-cell {
-    gap: 4px;
+    gap: 3px;
     display: flex;
     align-items: center;
     flex-wrap: nowrap;
   }
 
   .print-table .task-icon {
-    font-size: 1.6em;
+    font-size: 1.4em;
     flex-shrink: 0;
     line-height: 1;
   }
 
   .print-table .task-name {
-    font-size: 1.4em;
+    font-size: 1.2em;
     word-break: break-word;
-    hyphens: auto;
-    line-height: 1.2;
+    line-height: 1.1;
     flex: 1;
     min-width: 0;
+    overflow: hidden;
   }
 
   .staff-name-print {
-    font-size: 1.4em;
+    font-size: 1.2em;
     word-break: break-word;
-    hyphens: auto;
-    line-height: 1.2;
+    line-height: 1.1;
     display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .footer-decorations {
@@ -945,44 +949,44 @@
   }
 
   .print-table {
-    font-size: 0.42em;
+    font-size: 0.4em;
   }
 
   .print-table th {
-    padding: 7px 2px;
-    font-size: 1.5em;
-    line-height: 1.2;
+    padding: 5px 1px;
+    font-size: 1.1em;
+    line-height: 1.1;
   }
 
   .print-table td {
-    padding: 7px 2px;
-    min-height: 38px;
+    padding: 5px 1px;
+    min-height: 32px;
   }
 
   .print-table .task-column {
-    width: 28%;
-    font-size: 1.3em;
-    padding-left: 5px;
-    padding-right: 3px;
+    width: 30%;
+    font-size: 1.1em;
+    padding-left: 4px;
+    padding-right: 2px;
   }
 
   .print-table .task-name-cell {
-    gap: 3px;
+    gap: 2px;
   }
 
   .print-table .task-icon {
-    font-size: 1.5em;
+    font-size: 1.3em;
     line-height: 1;
   }
 
   .print-table .task-name {
-    font-size: 1.3em;
-    line-height: 1.2;
+    font-size: 1.1em;
+    line-height: 1.1;
   }
 
   .staff-name-print {
-    font-size: 1.3em;
-    line-height: 1.2;
+    font-size: 1.1em;
+    line-height: 1.1;
   }
 
   .footer-decorations {
