@@ -169,14 +169,14 @@ function MobileScheduleView({
             className="week-nav-btn"
             onClick={() => onNavigateWeek(-1)}
           >
-            ←
+            ◀
           </button>
           <span className="week-range">{weekRange}</span>
           <button
             className="week-nav-btn"
             onClick={() => onNavigateWeek(1)}
           >
-            →
+            ▶
           </button>
         </div>
 
