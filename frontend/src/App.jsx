@@ -37,6 +37,11 @@ const getDayName = (dayNumber) => DAYS_ARRAY[dayNumber];
 function MainApp() {
   const { user, logout, canEdit, isAdmin, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
   const [staff, setStaff] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [currentSchedule, setCurrentSchedule] = useState(null);
@@ -697,7 +702,7 @@ function MainApp() {
                   👥 Users
                 </button>
               )}
-              <button className="btn-logout" onClick={logout}>
+              <button className="btn-logout" onClick={handleLogout}>
                 🚪 Logout
               </button>
             </div>

@@ -113,7 +113,7 @@ function MobileScheduleView({
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate('/');
   };
 
   const handleUserManagement = () => {
