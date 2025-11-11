@@ -89,6 +89,65 @@ function PrintView({ tasks, staff, assignments, weekStartDate, showDays, onClose
 
   const weekDateRange = `${weekStart.toLocaleDateString()} - ${weekEnd.toLocaleDateString()}`;
 
+  // Helper function for dynamic font sizing
+  const adjustFontSizes = () => {
+    const table = printContentRef.current?.querySelector('.print-table');
+    if (!table) return;
+
+    // Adjust staff names in cells
+    const staffCells = table.querySelectorAll('.staff-name-print');
+    staffCells.forEach(cell => {
+      const parent = cell.parentElement;
+      if (!parent) return;
+
+      // Reset font size to default
+      cell.style.fontSize = '';
+
+      // Check if text overflows
+      const maxWidth = parent.clientWidth - 8; // Account for padding
+      let fontSize = parseFloat(window.getComputedStyle(cell).fontSize);
+
+      while (cell.scrollWidth > maxWidth && fontSize > 8) {
+        fontSize -= 0.5;
+        cell.style.fontSize = `${fontSize}px`;
+      }
+    });
+
+    // Adjust task names
+    const taskNames = table.querySelectorAll('.task-name');
+    taskNames.forEach(taskName => {
+      const parent = taskName.closest('.task-name-cell');
+      if (!parent) return;
+
+      // Reset font size to default
+      taskName.style.fontSize = '';
+
+      // Check if text overflows
+      const maxWidth = parent.clientWidth - 40; // Account for icon and padding
+      let fontSize = parseFloat(window.getComputedStyle(taskName).fontSize);
+
+      while (taskName.scrollWidth > maxWidth && fontSize > 8) {
+        fontSize -= 0.5;
+        taskName.style.fontSize = `${fontSize}px`;
+      }
+    });
+
+    // Adjust day headers
+    const dayHeaders = table.querySelectorAll('th:not(.task-column)');
+    dayHeaders.forEach(header => {
+      // Reset font size to default
+      header.style.fontSize = '';
+
+      const maxWidth = header.clientWidth - 8;
+      let fontSize = parseFloat(window.getComputedStyle(header).fontSize);
+
+      while (header.scrollWidth > maxWidth && fontSize > 8) {
+        fontSize -= 0.5;
+        header.style.fontSize = `${fontSize}px`;
+      }
+    });
+  };
+
   useEffect(() => {
     // Add print-specific class to body
     document.body.classList.add('print-mode');
@@ -96,6 +155,18 @@ function PrintView({ tasks, staff, assignments, weekStartDate, showDays, onClose
       document.body.classList.remove('print-mode');
     };
   }, []);
+
+  useEffect(() => {
+    // Adjust on mount and when design changes
+    setTimeout(adjustFontSizes, 100);
+
+    // Adjust on window resize
+    window.addEventListener('resize', adjustFontSizes);
+
+    return () => {
+      window.removeEventListener('resize', adjustFontSizes);
+    };
+  }, [selectedDesign, tasks, assignments]);
 
   const handlePrint = () => {
     window.print();
@@ -121,6 +192,12 @@ function PrintView({ tasks, staff, assignments, weekStartDate, showDays, onClose
 
       // Wait for layout to settle
       await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Apply dynamic font sizing for desktop layout
+      adjustFontSizes();
+
+      // Wait for font adjustments to complete
+      await new Promise(resolve => setTimeout(resolve, 50));
 
       // Capture the content as canvas with higher quality
       const canvas = await html2canvas(content, {

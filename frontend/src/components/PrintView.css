@@ -826,11 +826,9 @@
     font-size: 1.2em;
     border-right: 2px solid #B4E7CE;
     border-bottom: 2px solid #B4E7CE;
-    word-break: break-word;
     line-height: 1.1;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: normal;
+    white-space: nowrap;
   }
 
   .print-table td {
@@ -843,10 +841,9 @@
   }
 
   .print-table .task-column {
-    width: auto;
+    width: 22%;
     font-size: 1.2em;
     padding: 6px 4px;
-    white-space: nowrap;
   }
 
   .print-table .task-name-cell {
@@ -855,7 +852,6 @@
     align-items: center;
     flex-wrap: nowrap;
     justify-content: flex-start;
-    white-space: nowrap;
   }
 
   .print-table .task-icon {
@@ -868,15 +864,15 @@
     font-size: 1.1em;
     line-height: 1.1;
     white-space: nowrap;
+    overflow: hidden;
   }
 
   .staff-name-print {
     font-size: 1.2em;
-    word-break: break-word;
     line-height: 1.1;
     display: block;
     overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .footer-decorations {
@@ -964,10 +960,9 @@
   }
 
   .print-table .task-column {
-    width: auto;
+    width: 22%;
     font-size: 1.1em;
     padding: 5px 3px;
-    white-space: nowrap;
   }
 
   .print-table .task-name-cell {
@@ -984,11 +979,14 @@
     font-size: 1.0em;
     line-height: 1.1;
     white-space: nowrap;
+    overflow: hidden;
   }
 
   .staff-name-print {
     font-size: 1.1em;
     line-height: 1.1;
+    white-space: nowrap;
+    overflow: hidden;
   }
 
   .footer-decorations {
