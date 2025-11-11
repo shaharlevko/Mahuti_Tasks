@@ -9,12 +9,78 @@ const DAYS_5 = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
 const DAYS_6 = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 const DAY_COLORS = ['#8B4513', '#4169E1', '#2F4F4F', '#FF8C00', '#8B4513', '#DC143C'];
 
+// Design theme configurations
+const DESIGN_THEMES = {
+  garden: {
+    name: "Garden Party",
+    colors: {
+      tableHeader: "linear-gradient(135deg, #C7ECDE 0%, #D5F4E6 100%)",
+      tableBorder: "#B4E7CE",
+      taskColumn: "linear-gradient(135deg, #FFF4E0 0%, #FFFEF0 100%)",
+      titleColor: "#2D5F4B",
+      dayColors: ['#8B4513', '#4169E1', '#2F4F4F', '#FF8C00', '#8B4513', '#DC143C']
+    },
+    decorations: {
+      headerLeft: "🌸🌼",
+      headerRight: "🌻🌸",
+      footer: ["🌱", "🌿", "🍃", "🌿", "🌱"]
+    }
+  },
+  ocean: {
+    name: "Ocean Adventure",
+    colors: {
+      tableHeader: "linear-gradient(135deg, #A8D8EA 0%, #B4E7E8 100%)",
+      tableBorder: "#4A90A4",
+      taskColumn: "linear-gradient(135deg, #FFF9E3 0%, #FFFEF5 100%)",
+      titleColor: "#1E6B7F",
+      dayColors: ['#1E6B7F', '#2596BE', '#4A90A4', '#00A8CC', '#0077B6', '#1E6B7F']
+    },
+    decorations: {
+      headerLeft: "🌊🐠",
+      headerRight: "🐡🌊",
+      footer: ["🐚", "⭐", "🦀", "🐟", "🐠"]
+    }
+  },
+  sunny: {
+    name: "Sunny Meadow",
+    colors: {
+      tableHeader: "linear-gradient(135deg, #FFF4A3 0%, #FFECB3 100%)",
+      tableBorder: "#FFB347",
+      taskColumn: "linear-gradient(135deg, #FFFEF5 0%, #FFFEF8 100%)",
+      titleColor: "#E67E22",
+      dayColors: ['#E67E22', '#F39C12', '#F4D03F', '#F39C12', '#E67E22', '#D35400']
+    },
+    decorations: {
+      headerLeft: "☀️🌈",
+      headerRight: "☁️☀️",
+      footer: ["🦋", "🐝", "🐞", "🦋", "🐝"]
+    }
+  },
+  woodland: {
+    name: "Woodland Friends",
+    colors: {
+      tableHeader: "linear-gradient(135deg, #C7E8C7 0%, #B4D4B4 100%)",
+      tableBorder: "#8B7355",
+      taskColumn: "linear-gradient(135deg, #FFF8F0 0%, #FFFEF8 100%)",
+      titleColor: "#5D4037",
+      dayColors: ['#5D4037', '#6B4423', '#7B5D3F', '#8B6F47', '#6B4423', '#5D4037']
+    },
+    decorations: {
+      headerLeft: "🌲🍄",
+      headerRight: "🌳🌲",
+      footer: ["🦊", "🐿️", "🦝", "🦌", "🐻"]
+    }
+  }
+};
+
 function PrintView({ tasks, staff, assignments, weekStartDate, showDays, onClose, scheduleId }) {
   const printContentRef = useRef(null);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [selectedDesign, setSelectedDesign] = useState('garden');
   const { dialogState, showAlert } = useDialog();
 
   const DAYS = showDays === 6 ? DAYS_6 : DAYS_5;
+  const currentTheme = DESIGN_THEMES[selectedDesign];
 
   // Calculate week end date
   const weekStart = new Date(weekStartDate);
@@ -40,13 +106,37 @@ function PrintView({ tasks, staff, assignments, weekStartDate, showDays, onClose
     try {
       const content = printContentRef.current;
 
+      // Force desktop layout for PDF generation on all devices
+      const originalWidth = content.style.width;
+      const originalMaxWidth = content.style.maxWidth;
+      const originalFontSize = content.style.fontSize;
+
+      // Apply desktop print layout temporarily
+      content.style.width = '277mm'; // A4 landscape minus margins
+      content.style.maxWidth = '277mm';
+      content.style.fontSize = '16px'; // Base font size for desktop
+
+      // Add temporary class to force print styles
+      content.classList.add('force-print-layout');
+
+      // Wait for layout to settle
+      await new Promise(resolve => setTimeout(resolve, 100));
+
       // Capture the content as canvas with higher quality
       const canvas = await html2canvas(content, {
         scale: 2,
         useCORS: true,
         logging: false,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        width: 1045, // 277mm in pixels at 96dpi
+        windowWidth: 1045
       });
+
+      // Restore original styles
+      content.style.width = originalWidth;
+      content.style.maxWidth = originalMaxWidth;
+      content.style.fontSize = originalFontSize;
+      content.classList.remove('force-print-layout');
 
       // Create PDF in landscape A4 format
       const pdf = new jsPDF({
@@ -59,7 +149,7 @@ function PrintView({ tasks, staff, assignments, weekStartDate, showDays, onClose
       const pdfWidth = 297;
       const pdfHeight = 210;
 
-      // Calculate dimensions to fit the content
+      // Calculate dimensions to fit the content with margins
       const imgWidth = pdfWidth - 20; // 10mm margin on each side
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
@@ -118,24 +208,72 @@ function PrintView({ tasks, staff, assignments, weekStartDate, showDays, onClose
         </div>
       </div>
 
+      {/* Design selector dropdown - desktop only above preview */}
+      <div className="design-selector-container design-selector-desktop no-print">
+        <label htmlFor="design-select" className="design-label">
+          Choose Design:
+        </label>
+        <select
+          id="design-select"
+          value={selectedDesign}
+          onChange={(e) => setSelectedDesign(e.target.value)}
+          className="design-select"
+        >
+          {Object.entries(DESIGN_THEMES).map(([key, theme]) => (
+            <option key={key} value={key}>
+              {theme.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
       <div className="print-content-wrapper">
         <div className="print-content" ref={printContentRef}>
-          {/* Decorative header with flowers */}
+          {/* Decorative header with themed decorations */}
           <div className="print-header">
+            <div className="header-decoration header-left">
+              {currentTheme.decorations.headerLeft}
+            </div>
             <div className="title-container">
-              <h1 className="print-title">Weekly Task Schedule</h1>
-              <p className="week-dates">{weekDateRange}</p>
+              <h1 className="print-title" style={{ color: currentTheme.colors.titleColor }}>
+                Weekly Task Schedule
+              </h1>
+              <p className="week-dates" style={{ color: currentTheme.colors.titleColor }}>
+                {weekDateRange}
+              </p>
+            </div>
+            <div className="header-decoration header-right">
+              {currentTheme.decorations.headerRight}
             </div>
           </div>
 
           {/* Main schedule table */}
           <div className="print-table-container">
-            <table className="print-table">
+            <table
+              className="print-table"
+              style={{ borderColor: currentTheme.colors.tableBorder }}
+            >
               <thead>
-                <tr>
-                  <th className="task-column">Task/Day</th>
+                <tr style={{ background: currentTheme.colors.tableHeader }}>
+                  <th
+                    className="task-column"
+                    style={{
+                      background: currentTheme.colors.taskColumn,
+                      borderRightColor: currentTheme.colors.tableBorder,
+                      borderBottomColor: currentTheme.colors.tableBorder
+                    }}
+                  >
+                    Task/Day
+                  </th>
                   {DAYS.map((day, index) => (
-                    <th key={day} style={{ color: DAY_COLORS[index] }}>
+                    <th
+                      key={day}
+                      style={{
+                        color: currentTheme.colors.dayColors[index],
+                        borderRightColor: currentTheme.colors.tableBorder,
+                        borderBottomColor: currentTheme.colors.tableBorder
+                      }}
+                    >
                       {day}
                     </th>
                   ))}
@@ -144,7 +282,10 @@ function PrintView({ tasks, staff, assignments, weekStartDate, showDays, onClose
               <tbody>
                 {tasks.map(task => (
                   <tr key={task.id}>
-                    <td className="task-name-cell">
+                    <td
+                      className="task-name-cell"
+                      style={{ background: currentTheme.colors.taskColumn }}
+                    >
                       <span className="task-icon">{task.icon}</span>
                       <span className="task-name">{task.name}</span>
                     </td>
@@ -173,10 +314,36 @@ function PrintView({ tasks, staff, assignments, weekStartDate, showDays, onClose
             </table>
           </div>
 
-          {/* Decorative footer with nature elements */}
+          {/* Decorative footer with themed elements */}
           <div className="print-footer">
+            <div className="footer-decorations">
+              {currentTheme.decorations.footer.map((emoji, index) => (
+                <span key={index} className="decoration-item">
+                  {emoji}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
+      </div>
+
+      {/* Design selector dropdown - mobile only below preview */}
+      <div className="design-selector-container design-selector-mobile no-print">
+        <label htmlFor="design-select-mobile" className="design-label">
+          Choose Design:
+        </label>
+        <select
+          id="design-select-mobile"
+          value={selectedDesign}
+          onChange={(e) => setSelectedDesign(e.target.value)}
+          className="design-select"
+        >
+          {Object.entries(DESIGN_THEMES).map(([key, theme]) => (
+            <option key={key} value={key}>
+              {theme.name}
+            </option>
+          ))}
+        </select>
       </div>
 
       <ConfirmDialog {...dialogState} />

@@ -48,14 +48,21 @@
   padding: 8px 21px;
   border: none;
   border-radius: 18px;
-  font-size: 0.77em;
+  font-size: 1em;
   font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  font-weight: bold;
+  font-weight: 600;
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
   white-space: nowrap;
   flex-shrink: 0;
+  min-height: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  line-height: 1;
 }
 
 .btn-primary {
@@ -81,45 +88,188 @@
   transform: none;
 }
 
+/* Design selector dropdown */
+.design-selector-container {
+  max-width: 1200px;
+  margin: 20px auto;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  justify-content: center;
+}
+
+/* Desktop selector - above preview */
+.design-selector-desktop {
+  display: flex;
+}
+
+/* Mobile selector - below preview, hidden by default */
+.design-selector-mobile {
+  display: none;
+}
+
+.design-label {
+  font-weight: bold;
+  font-size: 1.1em;
+  color: #2D5F4B;
+  white-space: nowrap;
+}
+
+.design-select {
+  padding: 10px 20px;
+  border: 3px solid #B4E7CE;
+  border-radius: 12px;
+  font-size: 1em;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-weight: 600;
+  background: linear-gradient(135deg, #FFFFFF 0%, #FFFEF8 100%);
+  color: #2D5F4B;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 200px;
+}
+
+.design-select:hover {
+  border-color: #8ACFB0;
+  box-shadow: 0 2px 8px rgba(180, 231, 206, 0.3);
+}
+
+.design-select:focus {
+  outline: none;
+  border-color: #8ACFB0;
+  box-shadow: 0 0 0 3px rgba(180, 231, 206, 0.2);
+}
+
 .print-content-wrapper {
   width: 100%;
-  overflow: hidden; /* Clip zoomed content */
+  max-height: calc(100vh - 200px);
+  overflow: auto;
   position: relative;
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
 .print-content {
   background: white;
   max-width: 1200px;
+  width: 100%;
   margin: 0 auto;
-  padding: 40px;
+  padding: 25px 35px;
   border-radius: 10px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
-/* Print header with flowers */
+/* Force print layout for PDF generation */
+.print-content.force-print-layout {
+  width: 277mm !important;
+  max-width: 277mm !important;
+  padding: 5mm !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  overflow: visible !important;
+}
+
+.force-print-layout .print-header {
+  margin-bottom: 4mm !important;
+  gap: 6mm !important;
+}
+
+.force-print-layout .print-title {
+  font-size: 1.6em !important;
+  font-weight: bold !important;
+}
+
+.force-print-layout .week-dates {
+  font-size: 1.1em !important;
+  font-weight: 600 !important;
+}
+
+.force-print-layout .header-decoration {
+  font-size: 1.5em !important;
+}
+
+.force-print-layout .print-table {
+  font-size: 1rem !important;
+  table-layout: fixed !important;
+}
+
+.force-print-layout .print-table th {
+  font-size: 1.4em !important;
+  padding: 3mm 2mm !important;
+}
+
+.force-print-layout .print-table td {
+  padding: 3mm 2mm !important;
+}
+
+.force-print-layout .print-table .task-column {
+  font-size: 1.3em !important;
+  width: 35mm !important;
+}
+
+.force-print-layout .print-table .task-name {
+  font-size: 1.3em !important;
+}
+
+.force-print-layout .print-table .task-icon {
+  font-size: 1.6em !important;
+}
+
+.force-print-layout .staff-name-print {
+  font-size: 1.35em !important;
+}
+
+.force-print-layout .footer-decorations {
+  font-size: 1.2em !important;
+  gap: 4mm !important;
+}
+
+.force-print-layout .print-footer {
+  margin-top: 3mm !important;
+}
+
+/* Print header with decorations */
 .print-header {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 30px;
+  margin-bottom: 12px;
   position: relative;
+  gap: 10px;
+}
+
+.header-decoration {
+  font-size: 1.1em;
+  display: flex;
+  gap: 2px;
+}
+
+.header-left,
+.header-right {
+  flex-shrink: 0;
 }
 
 .title-container {
   text-align: center;
-  margin: 0 30px;
+  margin: 0 8px;
 }
 
 .print-title {
   color: #D47F61;
-  font-size: 2.2em;
+  font-size: 1.35em;
   margin: 0;
 }
 
 .week-dates {
   color: #2D5F4B;
-  font-size: 1em;
-  margin: 5px 0 0 0;
+  font-size: 0.75em;
+  margin: 2px 0 0 0;
   font-weight: bold;
 }
 
@@ -132,16 +282,19 @@
 
 /* Print table */
 .print-table-container {
-  margin: 20px 0;
+  margin: 8px 0;
+  overflow-x: auto;
+  overflow-y: visible;
 }
 
 .print-table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  border: 4px solid #B4E7CE;
-  border-radius: 15px;
+  border: 3px solid #B4E7CE;
+  border-radius: 12px;
   overflow: hidden;
+  table-layout: auto;
 }
 
 .print-table thead tr {
@@ -149,13 +302,14 @@
 }
 
 .print-table th {
-  padding: 20px 15px;
+  padding: 14px 10px;
   text-align: center;
-  font-size: 2em;
+  font-size: 1.5em;
   font-weight: bold;
-  border-right: 3px solid #B4E7CE;
-  border-bottom: 4px solid #B4E7CE;
+  border-right: 2px solid #B4E7CE;
+  border-bottom: 3px solid #B4E7CE;
   color: #2D5F4B;
+  white-space: nowrap;
 }
 
 .print-table th:last-child {
@@ -166,17 +320,18 @@
   background: linear-gradient(135deg, #FFF4E0 0%, #FFFEF0 100%);
   color: #666;
   text-align: left;
-  padding-left: 20px;
-  width: 180px;
-  font-size: 1.8em;
+  padding-left: 12px;
+  width: 150px;
+  font-size: 1.3em;
+  white-space: nowrap;
 }
 
 .print-table td {
-  padding: 20px 15px;
+  padding: 14px 10px;
   border-right: 2px solid #F0E8DC;
   border-bottom: 2px solid #F0E8DC;
   text-align: center;
-  min-height: 70px;
+  min-height: 55px;
 }
 
 .print-table td:last-child {
@@ -192,20 +347,24 @@
   font-weight: bold;
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 10px;
+  white-space: nowrap;
 }
 
 .print-table .task-icon {
-  font-size: 2.5em;
+  font-size: 1.8em;
+  flex-shrink: 0;
 }
 
 .print-table .task-name {
-  font-size: 1.8em;
+  font-size: 1.3em;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .staff-name-print {
   font-weight: bold;
-  font-size: 1.8em;
+  font-size: 1.4em;
 }
 
 .assignment-cell {
@@ -214,15 +373,20 @@
 
 /* Print footer decorations */
 .print-footer {
-  margin-top: 40px;
+  margin-top: 12px;
   text-align: center;
 }
 
 .footer-decorations {
   display: flex;
   justify-content: center;
-  gap: 20px;
-  font-size: 2.5em;
+  gap: 6px;
+  font-size: 0.75em;
+  flex-wrap: wrap;
+}
+
+.decoration-item {
+  display: inline-block;
 }
 
 .decoration {
@@ -239,20 +403,32 @@
   50% { transform: translateY(-10px); }
 }
 
-/* Print styles */
+/* Print styles - CONSISTENT ACROSS ALL DEVICES */
 @media print {
   @page {
     size: A4 landscape;
     margin: 10mm;
   }
 
-  body {
-    background: white;
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  html, body {
+    background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 297mm !important;
+    height: 210mm !important;
   }
 
   .print-view {
-    background: white;
-    padding: 0;
+    background: white !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
   }
 
   .no-print {
@@ -262,80 +438,267 @@
   .print-content-wrapper {
     overflow: visible !important;
     min-height: auto !important;
+    max-height: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
   }
 
   .print-content {
-    max-width: 100%;
-    padding: 15px;
-    box-shadow: none;
-    border-radius: 0;
-    width: 100%;
-    transform: none !important; /* Reset any zoom transforms for print */
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 5mm !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    transform: none !important;
+    overflow: visible !important;
+    display: block !important;
+    height: auto !important;
+  }
+
+  /* Header for print - maximum readability */
+  .print-header {
+    margin-bottom: 4mm !important;
+    gap: 6mm !important;
   }
 
   .print-title {
-    font-size: 1.5em;
+    font-size: 1.6em !important;
+    font-weight: bold !important;
   }
 
   .week-dates {
-    font-size: 0.9em;
+    font-size: 1.1em !important;
+    font-weight: 600 !important;
   }
 
-  .print-header {
-    margin-bottom: 10px;
+  .header-decoration {
+    font-size: 1.5em !important;
   }
 
+  .title-container {
+    margin: 0 6mm !important;
+  }
 
+  /* Optimize table for A4 horizontal */
   .print-table-container {
-    width: 100%;
-    overflow: hidden;
+    width: 100% !important;
+    overflow: visible !important;
+    margin: 3mm 0 !important;
   }
 
   .print-table {
-    page-break-inside: avoid;
-    width: 100%;
+    page-break-inside: avoid !important;
+    width: 100% !important;
+    border: 2px solid #B4E7CE !important;
+    border-radius: 6px !important;
+    table-layout: fixed !important;
+    font-size: 1rem !important;
   }
 
   .print-table th,
   .print-table td {
-    padding: 15px 10px;
-    word-wrap: break-word;
+    padding: 3mm 2mm !important;
+    word-wrap: break-word !important;
+    page-break-inside: avoid !important;
+    vertical-align: middle !important;
   }
 
   .print-table th {
-    font-size: 1.6em;
+    font-size: 1.4em !important;
+    border-right: 1.5px solid #B4E7CE !important;
+    border-bottom: 2px solid #B4E7CE !important;
+    white-space: nowrap !important;
+    line-height: 1.2 !important;
+  }
+
+  .print-table .task-column {
+    font-size: 1.3em !important;
+    padding-left: 3mm !important;
+    padding-right: 2mm !important;
+    width: 35mm !important;
+    white-space: nowrap !important;
   }
 
   .print-table .task-name {
-    font-size: 1.5em;
+    font-size: 1.3em !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.2 !important;
   }
 
   .print-table .task-icon {
-    font-size: 2em;
+    font-size: 1.6em !important;
+  }
+
+  .print-table .task-name-cell {
+    gap: 2mm !important;
+    white-space: nowrap !important;
+    padding: 3mm 3mm !important;
   }
 
   .staff-name-print {
-    font-size: 1.5em;
+    font-size: 1.35em !important;
+    line-height: 1.2 !important;
+  }
+
+  /* Footer - maximum readability */
+  .print-footer {
+    margin-top: 3mm !important;
   }
 
   .footer-decorations {
-    font-size: 1em;
-    margin-top: 10px;
+    font-size: 1.2em !important;
+    margin-top: 0 !important;
+    gap: 4mm !important;
   }
 
-  .print-footer {
-    margin-top: 10px;
+  .decoration-item {
+    font-size: 1em !important;
   }
 
   /* Dynamic scaling for 6 days */
-  .print-table th:nth-child(n+6),
-  .print-table td:nth-child(n+6) {
-    font-size: 0.9em;
+  .print-table th:nth-child(n+7),
+  .print-table td:nth-child(n+7) {
+    padding: 3mm 1.5mm !important;
   }
 
-  /* Scale down everything if many rows */
-  .print-table tbody tr:nth-child(n+6) {
-    height: auto;
+  /* Scale down for many rows */
+  .print-table tbody tr:nth-child(n+8) {
+    font-size: 0.92em !important;
+  }
+
+  .print-table tbody tr:nth-child(n+8) th,
+  .print-table tbody tr:nth-child(n+8) td {
+    padding: 2.5mm 2mm !important;
+  }
+}
+
+/* Mobile print override - FORCE EXACT SAME AS DESKTOP */
+@media print and (max-width: 768px) {
+  html, body {
+    width: 297mm !important;
+    height: 210mm !important;
+  }
+
+  .print-content {
+    padding: 5mm !important;
+  }
+
+  .print-header {
+    margin-bottom: 4mm !important;
+    gap: 6mm !important;
+  }
+
+  .print-title {
+    font-size: 1.6em !important;
+    font-weight: bold !important;
+  }
+
+  .week-dates {
+    font-size: 1.1em !important;
+    font-weight: 600 !important;
+  }
+
+  .header-decoration {
+    font-size: 1.5em !important;
+  }
+
+  .print-table {
+    font-size: 1rem !important;
+    table-layout: fixed !important;
+  }
+
+  .print-table th {
+    font-size: 1.4em !important;
+  }
+
+  .print-table td {
+    padding: 3mm 2mm !important;
+  }
+
+  .print-table .task-column {
+    font-size: 1.3em !important;
+    width: 35mm !important;
+  }
+
+  .print-table .task-name {
+    font-size: 1.3em !important;
+  }
+
+  .print-table .task-icon {
+    font-size: 1.6em !important;
+  }
+
+  .print-table .task-name-cell {
+    padding: 3mm 3mm !important;
+  }
+
+  .staff-name-print {
+    font-size: 1.35em !important;
+  }
+
+  .footer-decorations {
+    font-size: 1.2em !important;
+    gap: 4mm !important;
+  }
+
+  .print-footer {
+    margin-top: 3mm !important;
+  }
+}
+
+/* Small mobile print override - FORCE EXACT SAME AS DESKTOP */
+@media print and (max-width: 480px) {
+  html, body {
+    width: 297mm !important;
+    height: 210mm !important;
+  }
+
+  .print-title {
+    font-size: 1.6em !important;
+    font-weight: bold !important;
+  }
+
+  .week-dates {
+    font-size: 1.1em !important;
+    font-weight: 600 !important;
+  }
+
+  .header-decoration {
+    font-size: 1.5em !important;
+  }
+
+  .print-table {
+    font-size: 1rem !important;
+  }
+
+  .print-table th {
+    font-size: 1.4em !important;
+  }
+
+  .print-table .task-column {
+    font-size: 1.3em !important;
+  }
+
+  .print-table .task-name {
+    font-size: 1.3em !important;
+  }
+
+  .print-table .task-icon {
+    font-size: 1.6em !important;
+  }
+
+  .staff-name-print {
+    font-size: 1.35em !important;
+  }
+
+  .footer-decorations {
+    font-size: 1.2em !important;
   }
 }
 
@@ -343,15 +706,44 @@
 @media (max-width: 768px) {
   .print-view {
     padding: 0;
-    overflow-x: hidden; /* Prevent horizontal scroll */
-    overflow-y: auto; /* Allow vertical scroll */
+    overflow-x: hidden;
+    overflow-y: auto;
     width: 100vw;
+  }
+
+  /* Hide desktop selector, show mobile selector */
+  .design-selector-desktop {
+    display: none !important;
+  }
+
+  .design-selector-mobile {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center;
+    justify-content: center;
+    margin: 15px auto;
+    padding: 10px 15px;
+    gap: 12px;
+  }
+
+  .design-label {
+    font-size: 0.95em;
+    flex-shrink: 0;
+  }
+
+  .design-select {
+    min-width: auto;
+    max-width: none;
+    flex: 1;
+    padding: 8px 12px;
+    font-size: 0.9em;
   }
 
   .print-content-wrapper {
     width: 100vw;
-    overflow: hidden; /* Clip content during zoom */
-    min-height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 10px 0;
   }
 
   .print-controls {
@@ -364,7 +756,7 @@
     display: none !important;
   }
 
-  /* Keep buttons in single horizontal row on mobile - Back left, Download right */
+  /* Keep buttons in single horizontal row on mobile */
   .action-buttons {
     gap: 8px;
     flex-direction: row !important;
@@ -385,83 +777,19 @@
     display: inline-block;
   }
 
-  /* Make print content fill mobile width - preserving A4 horizontal aspect ratio */
+  /* Make print content fill mobile width and ensure table fits */
   .print-content {
-    max-width: 100vw;
-    width: 100vw;
-    padding: 15px 10px;
-    margin: 0;
+    max-width: 100%;
+    width: calc(100vw - 20px);
+    padding: 12px 8px;
+    margin: 0 10px;
     box-sizing: border-box;
-    border-radius: 0;
-    box-shadow: none;
-    transform-origin: top center;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   }
 
-  .print-title {
-    font-size: 1.3em;
-  }
-
-  .week-dates {
-    font-size: 0.85em;
-  }
-
-  /* Ensure table fits within container */
-  .print-table-container {
-    overflow: visible;
-    width: 100%;
-  }
-
-  .print-table {
-    font-size: 0.55em; /* Smaller to fit mobile width */
-    width: 100%;
-    border: 2px solid #B4E7CE; /* Thinner border */
-  }
-
-  .print-table th {
-    padding: 8px 4px;
-    font-size: 1.4em;
-    border-right: 2px solid #B4E7CE;
-    border-bottom: 2px solid #B4E7CE;
-  }
-
-  .print-table td {
-    padding: 8px 4px;
-    border-right: 1px solid #F0E8DC;
-    border-bottom: 1px solid #F0E8DC;
-    min-height: 50px;
-  }
-
-  .print-table .task-column {
-    width: 90px;
-    font-size: 1.4em;
-    padding-left: 8px;
-  }
-
-  .print-table .task-name-cell {
-    gap: 8px;
-  }
-
-  .print-table .task-icon {
-    font-size: 1.8em;
-  }
-
-  .print-table .task-name {
-    font-size: 1.4em;
-  }
-
-  .staff-name-print {
-    font-size: 1.4em;
-  }
-
-  .footer-decorations {
-    font-size: 1.5em;
-    gap: 10px;
-  }
-}
-
-@media (max-width: 480px) {
-  .print-content {
-    padding: 10px 5px;
+  .header-decoration {
+    font-size: 1em;
   }
 
   .print-title {
@@ -469,10 +797,114 @@
   }
 
   .week-dates {
-    font-size: 0.75em;
+    font-size: 0.7em;
   }
 
-  /* Keep buttons in horizontal row even on small screens - Back left, Download right */
+  .print-header {
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  /* Ensure table fits within container */
+  .print-table-container {
+    overflow-x: auto;
+    width: 100%;
+    margin: 8px 0;
+  }
+
+  .print-table {
+    width: 100%;
+    min-width: 100%;
+    font-size: 0.5em;
+    border: 2px solid #B4E7CE;
+  }
+
+  .print-table th {
+    padding: 10px 5px;
+    font-size: 1.8em;
+    border-right: 2px solid #B4E7CE;
+    border-bottom: 2px solid #B4E7CE;
+  }
+
+  .print-table td {
+    padding: 10px 5px;
+    border-right: 1px solid #F0E8DC;
+    border-bottom: 1px solid #F0E8DC;
+    min-height: 45px;
+  }
+
+  .print-table .task-column {
+    width: 100px;
+    font-size: 1.6em;
+    padding-left: 8px;
+  }
+
+  .print-table .task-name-cell {
+    gap: 6px;
+  }
+
+  .print-table .task-icon {
+    font-size: 2em;
+  }
+
+  .print-table .task-name {
+    font-size: 1.6em;
+  }
+
+  .staff-name-print {
+    font-size: 1.6em;
+  }
+
+  .footer-decorations {
+    font-size: 1em;
+    gap: 8px;
+  }
+
+  .print-footer {
+    margin-top: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .design-selector-mobile {
+    margin: 10px auto;
+    padding: 8px 10px;
+    gap: 10px;
+  }
+
+  .design-label {
+    font-size: 0.85em;
+  }
+
+  .design-select {
+    padding: 7px 10px;
+    font-size: 0.85em;
+  }
+
+  .print-content {
+    width: calc(100vw - 10px);
+    padding: 10px 5px;
+    margin: 0 5px;
+  }
+
+  .header-decoration {
+    font-size: 0.85em;
+  }
+
+  .print-title {
+    font-size: 0.95em;
+  }
+
+  .week-dates {
+    font-size: 0.65em;
+  }
+
+  .print-header {
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  /* Keep buttons in horizontal row even on small screens */
   .action-buttons {
     flex-direction: row !important;
     flex-wrap: nowrap !important;
@@ -493,44 +925,48 @@
   }
 
   .print-table {
-    font-size: 0.45em; /* Even smaller for very small screens */
+    font-size: 0.42em;
   }
 
   .print-table th {
-    padding: 6px 3px;
-    font-size: 1.4em;
+    padding: 8px 3px;
+    font-size: 1.7em;
   }
 
   .print-table td {
-    padding: 6px 3px;
+    padding: 8px 3px;
     min-height: 40px;
   }
 
   .print-table .task-column {
-    width: 80px;
-    font-size: 1.4em;
+    width: 85px;
+    font-size: 1.5em;
     padding-left: 5px;
   }
 
   .print-table .task-name-cell {
-    gap: 6px;
+    gap: 5px;
   }
 
   .print-table .task-icon {
-    font-size: 1.6em;
+    font-size: 1.8em;
   }
 
   .print-table .task-name {
-    font-size: 1.4em;
+    font-size: 1.5em;
   }
 
   .staff-name-print {
-    font-size: 1.4em;
+    font-size: 1.5em;
   }
 
   .footer-decorations {
-    font-size: 1.2em;
-    gap: 8px;
+    font-size: 0.85em;
+    gap: 6px;
     flex-wrap: wrap;
+  }
+
+  .print-footer {
+    margin-top: 8px;
   }
 }
