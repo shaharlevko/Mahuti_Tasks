@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { getInitials, getRoleBorderColor } from '../utils/userUtils';
 import { useClickOutside } from '../hooks/useClickOutside';
+import { useDialog } from '../hooks/useDialog';
+import ConfirmDialog from './ConfirmDialog';
 import './MobileScheduleView.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
@@ -93,6 +95,9 @@ function MobileScheduleView({
   const { user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
 
+  // Custom dialog hook
+  const { dialogState, showConfirm } = useDialog();
+
   // Ref for click-outside detection on mobile menu
   const menuRef = useRef(null);
 
@@ -126,8 +131,15 @@ function MobileScheduleView({
     setSelectedTaskForAssignment(null);
   };
 
-  const handleRemoveAssignment = (assignmentId) => {
-    if (window.confirm('Remove this assignment?')) {
+  const handleRemoveAssignment = async (assignmentId) => {
+    const confirmed = await showConfirm({
+      message: 'Remove this assignment?',
+      title: 'Confirm Removal',
+      icon: '🗑️',
+      confirmText: 'Remove',
+      cancelText: 'Cancel'
+    });
+    if (confirmed) {
       onRemoveAssignment(assignmentId);
     }
   };
@@ -139,8 +151,15 @@ function MobileScheduleView({
     return assignments[key];
   };
 
-  const handleClearWeek = () => {
-    if (window.confirm('Clear all assignments for this week?')) {
+  const handleClearWeek = async () => {
+    const confirmed = await showConfirm({
+      message: 'Clear all assignments for this week?',
+      title: 'Clear Week',
+      icon: '🗑️',
+      confirmText: 'Clear',
+      cancelText: 'Cancel'
+    });
+    if (confirmed) {
       onClearWeek();
     }
   };
@@ -376,6 +395,8 @@ function MobileScheduleView({
           onClose={() => setShowTaskManager(false)}
         />
       )}
+
+      <ConfirmDialog {...dialogState} />
     </div>
   );
 }
@@ -389,6 +410,8 @@ function StaffManagerModal({ staff, onAdd, onUpdate, onDelete, onClose }) {
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [unlinkedUsers, setUnlinkedUsers] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
+
+  const { dialogState, showConfirm } = useDialog();
 
   const SATURATED_COLORS = [
     '#FF6B58', '#E74B9C', '#9370DB', '#4A90E2', '#00BCD4', '#20B2AA',
@@ -450,8 +473,15 @@ function StaffManagerModal({ staff, onAdd, onUpdate, onDelete, onClose }) {
     setShowForm(true);
   };
 
-  const handleDelete = (id) => {
-    if (window.confirm('Delete this staff member?')) {
+  const handleDelete = async (id) => {
+    const confirmed = await showConfirm({
+      message: 'Delete this staff member?',
+      title: 'Delete Staff',
+      icon: '🗑️',
+      confirmText: 'Delete',
+      cancelText: 'Cancel'
+    });
+    if (confirmed) {
       onDelete(id);
     }
   };
@@ -535,6 +565,7 @@ function StaffManagerModal({ staff, onAdd, onUpdate, onDelete, onClose }) {
           </div>
         </div>
       </div>
+      <ConfirmDialog {...dialogState} />
     </div>
   );
 }
@@ -548,6 +579,8 @@ function TaskManagerModal({ tasks, onAdd, onUpdate, onDelete, onClose }) {
   const [showForm, setShowForm] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [selectedEmojiCategory, setSelectedEmojiCategory] = useState('Food & Drinks');
+
+  const { dialogState, showConfirm } = useDialog();
 
   const SATURATED_COLORS = [
     '#FF6B58', '#E74B9C', '#9370DB', '#4A90E2', '#00BCD4', '#20B2AA',
@@ -595,8 +628,15 @@ function TaskManagerModal({ tasks, onAdd, onUpdate, onDelete, onClose }) {
     setShowForm(true);
   };
 
-  const handleDelete = (id) => {
-    if (window.confirm('Delete this task?')) {
+  const handleDelete = async (id) => {
+    const confirmed = await showConfirm({
+      message: 'Delete this task?',
+      title: 'Delete Task',
+      icon: '🗑️',
+      confirmText: 'Delete',
+      cancelText: 'Cancel'
+    });
+    if (confirmed) {
       onDelete(id);
     }
   };
@@ -712,6 +752,7 @@ function TaskManagerModal({ tasks, onAdd, onUpdate, onDelete, onClose }) {
           </div>
         </div>
       </div>
+      <ConfirmDialog {...dialogState} />
     </div>
   );
 }
