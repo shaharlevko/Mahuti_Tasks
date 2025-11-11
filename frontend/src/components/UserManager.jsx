@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import './UserManager.css';
 import LoadingAnimation from './LoadingAnimation';
+import { getInitials, getRoleBorderColor } from '../utils/userUtils';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
@@ -180,18 +181,39 @@ function UserManager() {
             <table className="users-table">
               <thead>
                 <tr>
+                  <th>Avatar</th>
                   <th>Name</th>
-                  <th>Email</th>
                   <th>Role</th>
-                  <th>Created</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {users.map(u => (
                   <tr key={u.id}>
+                    <td className="user-avatar-cell">
+                      <div
+                        className="table-user-avatar"
+                        style={{
+                          borderColor: getRoleBorderColor(u.role)
+                        }}
+                      >
+                        {u.profile_picture_url ? (
+                          <img
+                            src={u.profile_picture_url}
+                            alt={u.name}
+                            className="table-avatar-img"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              e.target.nextSibling.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+                        <span className="table-avatar-initials" style={{ display: u.profile_picture_url ? 'none' : 'flex' }}>
+                          {getInitials(u.name)}
+                        </span>
+                      </div>
+                    </td>
                     <td>{u.name}</td>
-                    <td>{u.email}</td>
                     <td>
                       <select
                         value={u.role}
@@ -204,7 +226,6 @@ function UserManager() {
                         <option value="staff">Staff</option>
                       </select>
                     </td>
-                    <td>{new Date(u.created_at).toLocaleDateString()}</td>
                     <td>
                       <button
                         onClick={() => handleDeleteUser(u.id, u.email)}

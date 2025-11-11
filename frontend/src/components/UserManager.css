@@ -274,6 +274,45 @@
   background-color: #FFB999;
 }
 
+/* User Avatar Styling in Table */
+.user-avatar-cell {
+  text-align: center;
+  padding: 8px !important;
+  width: 60px;
+}
+
+.table-user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background-color: white;
+  position: relative;
+}
+
+.table-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.table-avatar-initials {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+  background: linear-gradient(135deg, #FFE5D9 0%, #FFF4E6 100%);
+}
+
 /* Responsive Design for Mobile */
 @media (max-width: 768px) {
   .user-manager-header .header-content {
@@ -292,7 +331,39 @@
 
   .users-table,
   .invites-table {
-    min-width: 600px;
+    min-width: 480px;
+    font-size: 0.9em;
+  }
+
+  .users-table th,
+  .users-table td,
+  .invites-table th,
+  .invites-table td {
+    padding: 8px 6px;
+  }
+
+  .user-avatar-cell {
+    width: 48px;
+    padding: 6px !important;
+  }
+
+  .table-user-avatar {
+    width: 32px;
+    height: 32px;
+  }
+
+  .table-avatar-initials {
+    font-size: 12px;
+  }
+
+  .role-select {
+    padding: 4px 6px;
+    font-size: 13px;
+  }
+
+  .btn-delete {
+    padding: 5px 10px;
+    font-size: 12px;
   }
 
   /* Stack invite form vertically on mobile */
