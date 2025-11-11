@@ -45,11 +45,10 @@ function Register({ onSwitchToLogin }) {
     <div className="login-container">
       <div className="login-card">
         <div className="login-header">
-          <h1>Mahuti Tasks</h1>
+          <img src="/mahuti-logo.svg" alt="Mahuti" className="login-logo" />
         </div>
 
-        <h2>Create Account</h2>
-        <p className="login-subtitle">Join us to start managing schedules</p>
+        <p className="login-subtitle">Create account to manage weekly tasks</p>
 
         {error && <div className="error-message">{error}</div>}
 

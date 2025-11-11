@@ -48,11 +48,10 @@ function Login({ onSwitchToRegister }) {
     <div className="login-container">
       <div className="login-card">
         <div className="login-header">
-          <h1>Mahuti Tasks</h1>
+          <img src="/mahuti-logo.svg" alt="Mahuti" className="login-logo" />
         </div>
 
-        <h2>Welcome Back!</h2>
-        <p className="login-subtitle">Sign in to manage your weekly schedules</p>
+        <p className="login-subtitle">Sign in to Mahuti weekly tasks</p>
 
         {error && <div className="error-message">{error}</div>}
 
